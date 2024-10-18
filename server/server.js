@@ -22,7 +22,7 @@ mongoose
   
 // Apply middlewares
 app.use(cors({
-  origin: ["https://awarness.vercel.app"],
+  origin: ["awarness-leqd.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
@@ -64,9 +64,14 @@ fs.readdirSync("./routes").forEach((r) => {
 });
 
 
-// port
-const port = process.env.PORT || 8000;
-
-app.listen(port, () => {
-  console.log(`Server is running on port : ${port}`);
-});
+// Remplacez la partie d'écoute du serveur par ceci :
+if (process.env.VERCEL) {
+  // Exportez l'application pour Vercel
+  module.exports = app;
+} else {
+  // Démarrez le serveur normalement pour le développement local
+  const port = process.env.PORT || 8000;
+  app.listen(port, () => {
+    console.log(`Server is running on port : ${port}`);
+  });
+}
