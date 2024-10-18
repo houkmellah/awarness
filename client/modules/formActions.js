@@ -68,7 +68,7 @@ const Auth = () => {
             </Text>
           )}
           <Button fullWidth mt="xl" type="submit">
-            {isLogin ? 'Se connecter' : 'S'inscrire'}
+            {isLogin ? "Se connecter" : "S'inscrire"}
           </Button>
         </form>
       </Paper>
