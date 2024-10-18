@@ -21,7 +21,11 @@ mongoose
   .catch((err) => console.log("DB connection error", err));
   
 // Apply middlewares
-app.use(cors());
+app.use(cors({
+  origin: ["https://awarness.vercel.app"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(morgan("dev"));
 app.use((req, res, next) => {
