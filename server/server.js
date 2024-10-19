@@ -20,43 +20,48 @@ mongoose
   })
   .then(() => console.log("DB connected"))
   .catch((err) => console.log("DB connection error", err));
-  
-// Apply middlewares
-app.use(cors({
-  origin: ["awarness.vercel.app"],
 
-}));
+// Apply middlewares
+app.use(
+  cors({
+    origin: ["https://awarness.vercel.app"],
+  })
+);
 app.use(express.json());
 app.use(morgan("dev"));
 app.use((req, res, next) => {
   next();
 });
 
-const routesPath = path.join(__dirname, 'routes');
+const routesPath = path.join(__dirname, "routes");
 if (fs.existsSync(routesPath)) {
   fs.readdirSync(routesPath).forEach((r) => {
     try {
       const route = require(path.join(routesPath, r));
-      
+
       // Créer un nouveau router pour ce fichier de route
       const fileRouter = express.Router();
-      
+
       // Appliquer les routes du fichier à ce nouveau router
       route.router.stack.forEach((layer) => {
         if (layer.route) {
           const path = layer.route.path;
           const method = Object.keys(layer.route.methods)[0];
-          
+
           if (route.protected === true) {
             // Si la route est protégée, appliquer le middleware d'authentification
-            fileRouter[method](path, authMiddleware, layer.route.stack[0].handle);
+            fileRouter[method](
+              path,
+              authMiddleware,
+              layer.route.stack[0].handle
+            );
           } else {
             // Sinon, appliquer la route sans le middleware d'authentification
             fileRouter[method](path, layer.route.stack[0].handle);
           }
         }
       });
-      
+
       // Appliquer le nouveau router à l'application
       app.use("/api", fileRouter);
     } catch (error) {
