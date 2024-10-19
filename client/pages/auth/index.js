@@ -3,6 +3,7 @@ import Auth from '../../modules/auth'
 
 const index = () => {
   return (
+
     
     <Auth/>
   )
