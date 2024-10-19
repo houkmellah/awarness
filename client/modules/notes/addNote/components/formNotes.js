@@ -15,6 +15,7 @@ import EmojiRating from "./emojiRating";
 import ListPeople from "../../../people/addPerson/listPeople";
 import useAuthStore from "../../../auth/store";
 import { Debugger } from "../../../debugger";
+import { apiUrl } from "../../../utils/config";
 
 const FormNotes = ({ note }) => {
   const queryClient = useQueryClient();
@@ -48,7 +49,7 @@ const FormNotes = ({ note }) => {
   const createNoteMutation = useMutation({
     mutationFn: (values) =>
       axios.post(
-        "http://localhost:8000/api/notes",
+        `${process.env.NEXT_PUBLIC_API_URL}/notes`,
 
         values,
         {
@@ -70,7 +71,7 @@ const FormNotes = ({ note }) => {
   const updateNoteMutation = useMutation({
     mutationFn: (values) =>
       axios.put(
-        `http://localhost:8000/api/notes/${note._id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/notes/${note._id}`,
         { ...values, token },
         {
           params: { token },
@@ -102,7 +103,7 @@ const FormNotes = ({ note }) => {
     queryKey: ["tags"],
     queryFn: () =>
       axios
-        .get("http://localhost:8000/api/tags", {
+        .get(`${apiUrl}/tags`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -113,7 +114,7 @@ const FormNotes = ({ note }) => {
   const createTagMutation = useMutation({
     mutationFn: (newTag) =>
       axios.post(
-        "http://localhost:8000/api/tags",
+        `${process.env.NEXT_PUBLIC_API_URL}/tags`,
         { name: newTag, color: "#000000" }, // Vous pouvez ajuster la couleur par défaut
         {
           headers: {

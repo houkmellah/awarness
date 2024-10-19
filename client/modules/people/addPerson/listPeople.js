@@ -6,12 +6,13 @@ import AddPerson from "./index";
 import { Group } from "@mantine/core";
 import usePeopleStore from "./store/usePeopleStore";
 import useAuthStore from "../../auth/store";
+import { apiUrl } from "../../utils/config";
 
 const ListPeople = ({ form }) => {
   const { setPeople } = usePeopleStore();
   const {token} = useAuthStore()
   const fetchPeople = async () => {
-    const { data } = await axios.get(`http://localhost:8000/api/people`, {
+    const { data } = await axios.get(`${apiUrl}/people`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

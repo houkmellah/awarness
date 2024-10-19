@@ -4,9 +4,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Center, Stack, Button, TextInput } from "@mantine/core";
 import useAuthStore from "../../auth/store";
+import { apiUrl } from "../../utils/config";
 
 const AddPersonForm = ({ close, refetch }) => {
-  const {token} = useAuthStore()
+  const { token } = useAuthStore();
   const queryClient = useQueryClient();
 
   const form = useForm({
@@ -17,18 +18,17 @@ const AddPersonForm = ({ close, refetch }) => {
     },
   });
 
-  
-
   const createPersonMutation = useMutation({
-    mutationFn: (values) => axios.post("http://localhost:8000/api/people", values , {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }),
+    mutationFn: (values) =>
+      axios.post(`${apiUrl}/people`, values, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['people']);
+      queryClient.invalidateQueries(["people"]);
       close();
-      refetch()
+      refetch();
     },
     onError: (error) => {
       console.error("Failed to create person:", error);

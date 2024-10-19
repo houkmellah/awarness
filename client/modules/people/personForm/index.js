@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Center, Stack, Button, TextInput } from "@mantine/core";
 import useAuthStore from "../../auth/store";
+import { apiUrl } from "../../utils/config";
 
 const PersonForm = ({ close, refetch, person }) => {
   const token = useAuthStore();
@@ -18,7 +19,7 @@ const PersonForm = ({ close, refetch, person }) => {
 
   const createPersonMutation = useMutation({
     mutationFn: (values) =>
-      axios.post("http://localhost:8000/api/people", values, {
+      axios.post(`${apiUrl}/people`, values, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -37,7 +38,7 @@ const PersonForm = ({ close, refetch, person }) => {
     mutationFn: (values) => {
       const token = localStorage.getItem("token"); // Assurez-vous que c'est une chaîne
       return axios.put(
-        `http://localhost:8000/api/people/${person._id}`,
+        `${apiUrl}/people/${person._id}`,
         values, // Ne pas inclure le token dans le body
         {
           headers: {

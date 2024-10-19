@@ -39,6 +39,7 @@ import UpdateNote from "../updateNote";
 import getInitials from "../../utils/getInitials";
 import EmptyList from "../../ui/emptyList";
 import { fetchPeople } from "../../people/api/fetchPeople";
+import { apiUrl } from "../../utils/config";
 
 const lifeAspects = [
   { value: "Spiritual", color: "yellow", icon: IconHeart },
@@ -108,7 +109,7 @@ const ListNotes = () => {
   const fetchNotes = async () => {
     try {
       console.log("Token ======>", token);
-      const { data } = await axios.get(`http://localhost:8000/api/notes`, {
+      const { data } = await axios.get(`${apiUrl}/notes`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

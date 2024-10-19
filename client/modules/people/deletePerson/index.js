@@ -14,13 +14,14 @@ import {
 import { IconX, IconCheck, IconAlertTriangle } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import useAuthStore from "../../auth/store";
+import { apiUrl } from "../../utils/config";
 
 const DeletePerson = ({ id, onDeleteSuccess, setNotification, refetch }) => {
   const {token} = useAuthStore()
   const [opened, { open, close }] = useDisclosure(false);
 
   const deletePerson = async (id) => {
-    await axios.delete(`http://localhost:8000/api/people/${id}`, {
+    await axios.delete(`${apiUrl}/people/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

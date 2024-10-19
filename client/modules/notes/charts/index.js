@@ -5,6 +5,7 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "../../auth/store";
 import EmptyList from "../../ui/emptyList";
+import { apiUrl } from "../../utils/config";
 
 const RATING_COLORS = {
   1: "var(--mantine-color-red-7)",
@@ -25,7 +26,7 @@ const RATING_LABELS = {
 const LifeInsightsDashboard = () => {
   const { token } = useAuthStore();
   const fetchNotes = async () => {
-    const { data } = await axios.get("http://localhost:8000/api/notes", {
+    const { data } = await axios.get(`${apiUrl}/notes` , {
       headers: {
         Authorization: `Bearer ${token}`,
       },
