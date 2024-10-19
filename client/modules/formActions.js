@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { TextInput, PasswordInput, Button, Paper, Title, Text, Container, Group } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { register, login } from '../api';
-import useAuthStore from '../authStore';
+import { register, login } from './auth/api';
+import useAuthStore from './auth/store';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
