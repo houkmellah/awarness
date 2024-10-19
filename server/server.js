@@ -5,6 +5,7 @@ const mogoose = require("mongoose");
 const morgan = require("morgan");
 const { default: mongoose } = require("mongoose");
 const authMiddleware = require("./middlewares/auth");
+const path = require("path"); // Ajoutez cette ligne
 require("dotenv").config();
 console.log(process.env.DATABASE);
 
