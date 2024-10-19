@@ -22,9 +22,8 @@ mongoose
   
 // Apply middlewares
 app.use(cors({
-  origin: ["awarness-leqd.vercel.app"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
+  origin: ["awarness.vercel.app"],
+
 }));
 app.use(express.json());
 app.use(morgan("dev"));
