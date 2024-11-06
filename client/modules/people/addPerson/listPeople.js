@@ -10,7 +10,8 @@ import { apiUrl } from "../../utils/config";
 
 const ListPeople = ({ form }) => {
   const { setPeople } = usePeopleStore();
-  const {token} = useAuthStore()
+  const { token, user } = useAuthStore();
+
   const fetchPeople = async () => {
     const { data } = await axios.get(`${apiUrl}/people`, {
       headers: {
@@ -20,14 +21,16 @@ const ListPeople = ({ form }) => {
     setPeople(data);
     return data;
   };
+
   const {
     data: listPeople,
     isLoading,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["people"],
+    queryKey: ["people", user?.id],
     queryFn: fetchPeople,
+    enabled: !!token && !!user,
   });
 
   if (isLoading) return <div>Loading people...</div>;

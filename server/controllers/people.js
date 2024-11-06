@@ -23,21 +23,25 @@ const getPeople = async (req, res) => {
     const people = await People.find({ user: req.userId });
     res.status(200).json(people);
   } catch (error) {
-    console.error("Error in getPeople:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Erreur dans getPeople:", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
 
 // Get a specific person by ID
 const getPersonById = async (req, res) => {
   try {
-    const person = await People.findOne({ _id: req.params.id, user: req.userId });
+    const person = await People.findOne({ 
+      _id: req.params.id, 
+      user: req.userId 
+    });
+    
     if (!person) {
-      return res.status(404).json({ message: "Person not found" });
+      return res.status(404).json({ message: "Personne non trouvée" });
     }
     res.status(200).json(person);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch person", error: error.message });
+    res.status(500).json({ message: "Échec de la récupération de la personne", error: error.message });
   }
 };
 
