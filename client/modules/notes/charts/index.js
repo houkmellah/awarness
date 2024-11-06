@@ -86,15 +86,17 @@ const LifeInsightsDashboard = () => {
   );
 
   const lifeAspectData = notes.reduce((acc, note) => {
-    if (note.lifeAspect && note.rating) {
-      if (!acc[note.lifeAspect]) {
-        acc[note.lifeAspect] = { aspect: note.lifeAspect };
-        sortedRatings.forEach((rating) => {
-          acc[note.lifeAspect][RATING_LABELS[rating]] = 0;
-        });
-      }
-      const ratingKey = RATING_LABELS[note.rating];
-      acc[note.lifeAspect][ratingKey]++;
+    if (note.lifeAspect && note.rating && Array.isArray(note.lifeAspect)) {
+      note.lifeAspect.forEach(aspect => {
+        if (!acc[aspect]) {
+          acc[aspect] = { aspect: aspect };
+          sortedRatings.forEach((rating) => {
+            acc[aspect][RATING_LABELS[rating]] = 0;
+          });
+        }
+        const ratingKey = RATING_LABELS[note.rating];
+        acc[aspect][ratingKey]++;
+      });
     }
     return acc;
   }, {});
