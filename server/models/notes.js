@@ -19,10 +19,11 @@ const noteSchema = new Schema({
     required: true
   },
   
-  people: {
-    type: Array,
+  people: [{
+    type: Schema.Types.ObjectId,
+    ref: 'People',
     required: false
-  },
+  }],
   tags: {
     type: [String],
     required: false

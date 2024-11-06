@@ -135,6 +135,25 @@ const LifeInsightsDashboard = () => {
     color: RATING_COLORS[rating],
   }));
 
+  const peopleData = notes.reduce((acc, note) => {
+    if (note.people && Array.isArray(note.people)) {
+      note.people.forEach(person => {
+        const personName = `${person.firstName} ${person.secondName}`.trim();
+        if (!acc[personName]) {
+          acc[personName] = { person: personName };
+          sortedRatings.forEach((rating) => {
+            acc[personName][RATING_LABELS[rating]] = 0;
+          });
+        }
+        const ratingKey = RATING_LABELS[note.rating];
+        acc[personName][ratingKey]++;
+      });
+    }
+    return acc;
+  }, {});
+
+  const peopleChartData = Object.values(peopleData);
+
   return (
     <Stack spacing="xl">
       <Paper withBorder>
@@ -164,6 +183,21 @@ const LifeInsightsDashboard = () => {
               curveType="natural"
               withLegend
               legendProps={{ verticalAlign: "bottom", height: 60 }}
+            />
+          </Stack>
+        </Paper>
+      )}
+      {peopleChartData.length > 0 && (
+        <Paper withBorder>
+          <Stack shadow="xs" p="md" gap="">
+            <Title order={3}>Distribution des Émotions par Personne</Title>
+            <BarChart
+              h={300}
+              data={peopleChartData}
+              dataKey="person"
+              series={series}
+              tickLine="y"
+              yAxisProps={{ domain: [0, "auto"] }}
             />
           </Stack>
         </Paper>

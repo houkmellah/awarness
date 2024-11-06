@@ -26,7 +26,8 @@ const createNote = async (req, res) => {
 // Get all notes for the authenticated user
 const getNotes = async (req, res) => {
   try {
-    const notes = await Note.find({ user: req.userId });
+    const notes = await Note.find({ user: req.userId })
+      .populate('people', 'firstName secondName nickName');
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in getNotes:", error);
