@@ -40,6 +40,7 @@ import getInitials from "../../utils/getInitials";
 import EmptyList from "../../ui/emptyList";
 import { fetchPeople } from "../../people/api/fetchPeople";
 import { apiUrl } from "../../utils/config";
+import Debugger from "../../debugger";
 
 const lifeAspects = [
   { value: "Spiritual", color: "yellow", icon: IconHeart },
@@ -262,11 +263,11 @@ const ListNotes = () => {
                     </Table.Td>
                     <Table.Td>
                       <Avatar.Group spacing="sm">
-                        {note?.people?.map((personId) => {
-                          const person = people.find((p) => p._id === personId);
+                        {note?.people?.map((person) => {
+                          // const person = people.find((p) => p._id === personId);
                           return person ? (
                             <Tooltip
-                              key={personId}
+                              key={person._id}
                               label={`${person?.firstName} ${person?.secondName} ${person?.nickName}`}
                               withArrow
                             >
@@ -293,6 +294,7 @@ const ListNotes = () => {
                         />
                       </Group>
                     </Table.Td>
+                    {/* <Debugger data={note} /> */}
                   </Table.Tr>
                 ))}
               </Table.Tbody>
@@ -307,6 +309,7 @@ const ListNotes = () => {
           </>
         )}
       </Stack>
+      
     </>
   );
 };

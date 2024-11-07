@@ -24,7 +24,7 @@ mongoose
 // Apply middlewares
 app.use(
   cors({
-    origin: ["https://awarness.vercel.app"],
+    origin: true,
   })
 );
 app.use(express.json());
