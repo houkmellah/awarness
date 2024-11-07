@@ -25,8 +25,8 @@ mongoose
 app.use(
   cors({
     origin: [
+      "https://localhost:3000",
       "https://awarness.vercel.app",
-      "https://localhost.3000"
     ],
   })
 );
