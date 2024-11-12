@@ -3,7 +3,7 @@ import { AppShell, Burger, Group, Box, Stack, Image, Center } from "@mantine/cor
 import { useDisclosure } from "@mantine/hooks";
 import AddNote from "../notes/addNote";
 import { BsPeople } from "react-icons/bs";
-import { MdOutlineNotes } from "react-icons/md";
+import { MdOutlineMood, MdOutlineNotes } from "react-icons/md";
 import { MdDashboard } from "react-icons/md";
 import { useRouter } from "next/router";
 import AddPerson from "../people/addPerson";
@@ -16,6 +16,7 @@ const pages = [
   { name: "Dashboard", path: "/", icon: MdDashboard },
   { name: "People", path: "/people", icon: BsPeople },
   { name: "Notes", path: "/notes", icon: MdOutlineNotes },
+  { name : "Emotions", path : "/emotions", icon : MdOutlineMood },
 ];
 
 export function Layout({ children }) {

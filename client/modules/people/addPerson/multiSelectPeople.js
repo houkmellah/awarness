@@ -4,16 +4,27 @@ import { MultiSelect } from "@mantine/core";
 const MultiSelectPeople = ({ listPeople, form }) => {
   const convertedArray = listPeople.map((item) => ({
     value: item._id,
-    label: `${item.firstName} ${item.secondName} ${item.nickName}`.trim(),
+    label: `${item?.firstName || ''} ${item?.secondName || ''} ${item?.nickName || ''}`.trim(),
   }));
+
+  const selectedPeopleIds = form.values.people?.map(person => person._id) || [];
+
   return (
+    <>
     <MultiSelect
       data={convertedArray}
-      {...form.getInputProps("people")}
+      value={selectedPeopleIds}
+      onChange={(values) => {
+        const selectedPeople = values.map(id => 
+          listPeople.find(person => person._id === id)
+        ).filter(Boolean);
+        form.setFieldValue("people", selectedPeople);
+      }}
       searchable
       label="People"
       w="67%"
     />
+    </>
   );
 };
 

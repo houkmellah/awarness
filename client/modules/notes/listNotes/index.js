@@ -23,6 +23,7 @@ import DeleteNote from "../deleteNote";
 import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "../../auth/store";
 import usePeopleStore from "../../people/addPerson/store/usePeopleStore";
+import useEmotionsStore from "../../emotions/store"
 import {
   IconHeart,
   IconBrain,
@@ -91,6 +92,7 @@ const ListNotes = () => {
   let people;
 
   const { people: peopleFromStore, setPeople } = usePeopleStore();
+  const { emotions } = useEmotionsStore();
   const {
     data: peopleFromQuery = [],
     isError: isPeopleError,
@@ -169,7 +171,10 @@ const ListNotes = () => {
           : "ascending",
     }));
   };
-
+const getEmotionName = (value) => {
+  const emotion = emotions.find((e) => e._id === value);
+  return emotion ? emotion.name : "Unknown";
+}
   const renderSortIcon = (key) => {
     if (sortConfig.key === key) {
       return sortConfig.direction === "ascending" ? (
@@ -229,6 +234,9 @@ const ListNotes = () => {
                   <Table.Th onClick={() => onSort("lifeAspect")}>
                     Life Aspect {renderSortIcon("lifeAspect")}
                   </Table.Th>
+                  <Table.Th onClick={() => onSort("emotions")}>
+                    Emotions {renderSortIcon("emotions")}
+                  </Table.Th>
                   <Table.Th>People</Table.Th>
                   <Table.Th></Table.Th>
                 </Table.Tr>
@@ -248,6 +256,11 @@ const ListNotes = () => {
                         </Group>
                         </Stack>
                     </Table.Td>
+                    <Table.Td>
+                      {note?.emotions.map((emotion, index) => (
+                        <Badge key={index}>{getEmotionName(emotion)}</Badge>
+                      ))}
+                    </Table.Td>
                     <Table.Td visibleFrom="md">
                       {format(new Date(note.date), "eeee dd MMM")}
                     </Table.Td>
@@ -261,6 +274,7 @@ const ListNotes = () => {
                     <Table.Td>
                       <LifeAspectBadges aspects={note.lifeAspect} />
                     </Table.Td>
+                    
                     <Table.Td>
                       <Avatar.Group spacing="sm">
                         {note?.people?.map((person) => {
@@ -299,6 +313,7 @@ const ListNotes = () => {
                 ))}
               </Table.Tbody>
             </Table>
+            <Debugger data={emotions} />
             <Center mt="md">
               <Pagination
                 total={Math.ceil(sortedNotes.length / notesPerPage)}

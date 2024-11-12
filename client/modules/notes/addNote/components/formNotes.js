@@ -43,6 +43,7 @@ const FormNotes = ({ note }) => {
       lifeAspect: note?.lifeAspect ?? [],
       people: note?.people ?? [],
       tags: note?.tags ?? [],
+      emotions: note?.emotions ?? [],
     },
   });
 
@@ -135,6 +136,27 @@ const FormNotes = ({ note }) => {
     });
     return null;
   };
+  const fetchEmotions = async (token) => {
+    try {
+      const { data } = await axios.get(`${apiUrl}/emotions`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la récupération des personnes:", error);
+      throw error;
+    }
+  };
+  const {
+    data: emotions = [],
+
+  } = useQuery({
+    queryKey: ["ListPeople"],
+    queryFn: () => fetchEmotions(token),
+    enabled: !!token,
+  });
   return (
     <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
       <Center>
@@ -159,6 +181,15 @@ const FormNotes = ({ note }) => {
             getCreateLabel={(query) => `+ Create ${query}`}
             onCreate={handleCreateTag}
           />  */}
+          <MultiSelect
+            label="Emotions"
+            placeholder="Select emotions"
+            data={emotions?.map((emotion) => ({
+              value: emotion._id,
+              label: emotion.name,
+            }))}
+            {...form.getInputProps("emotions")}
+          />
           <TagsInput
             label="Tags"
             placeholder="Select or create tags"

@@ -28,6 +28,11 @@ const noteSchema = new Schema({
     type: [String],
     required: false
   },
+  emotions: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Emotion',
+    required: false
+  }],
   user: {
     type: Schema.Types.ObjectId,
     ref: 'User',
