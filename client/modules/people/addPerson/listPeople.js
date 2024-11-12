@@ -7,6 +7,7 @@ import { Group } from "@mantine/core";
 import usePeopleStore from "./store/usePeopleStore";
 import useAuthStore from "../../auth/store";
 import { apiUrl } from "../../utils/config";
+import Debugger from "../../debugger";
 
 const ListPeople = ({ form }) => {
   const { setPeople } = usePeopleStore();
@@ -42,6 +43,7 @@ const ListPeople = ({ form }) => {
         <Group align="flex-end" justify="space-between">
           <MultiSelectPeople listPeople={listPeople} form={form} />
           <AddPerson refetch={refetch} />
+          {/* <Debugger data={listPeople} /> */}
         </Group>
       )}
     </>
