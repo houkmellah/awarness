@@ -257,9 +257,12 @@ const getEmotionName = (value) => {
                         </Stack>
                     </Table.Td>
                     <Table.Td>
+                      <Stack>
                       {note?.emotions.map((emotion, index) => (
-                        <Badge key={index}>{getEmotionName(emotion)}</Badge>
+
+                          <Badge key={index}>{getEmotionName(emotion)}</Badge>
                       ))}
+                        </Stack>
                     </Table.Td>
                     <Table.Td visibleFrom="md">
                       {format(new Date(note.date), "eeee dd MMM")}

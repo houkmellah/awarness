@@ -68,7 +68,7 @@ const FormNotes = ({ note }) => {
       console.error("Failed to create note:", error);
     },
   });
-
+  
   const updateNoteMutation = useMutation({
     mutationFn: (values) =>
       axios.put(
@@ -157,6 +157,22 @@ const FormNotes = ({ note }) => {
     queryFn: () => fetchEmotions(token),
     enabled: !!token,
   });
+
+  const groupedEmotions = Object.values(
+    emotions.reduce((acc, emotion) => {
+        if (!acc[emotion.category]) {
+            acc[emotion.category] = {
+                group: emotion.category,
+                items: []
+            };
+        }
+        acc[emotion.category].items.push({
+            value: emotion._id,
+            label: emotion.name
+        });
+        return acc;
+    }, {})
+);
   return (
     <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
       <Center>
@@ -184,10 +200,7 @@ const FormNotes = ({ note }) => {
           <MultiSelect
             label="Emotions"
             placeholder="Select emotions"
-            data={emotions?.map((emotion) => ({
-              value: emotion._id,
-              label: emotion.name,
-            }))}
+            data={groupedEmotions}
             {...form.getInputProps("emotions")}
           />
           <TagsInput
