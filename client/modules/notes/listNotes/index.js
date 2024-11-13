@@ -42,6 +42,13 @@ import EmptyList from "../../ui/emptyList";
 import { fetchPeople } from "../../people/api/fetchPeople";
 import { apiUrl } from "../../utils/config";
 import Debugger from "../../debugger";
+const categoryColors = {
+  'doute': 'blue',
+  'refus': 'orange',
+  'colère': 'red',
+  'stress': 'yellow',
+  'agréable': 'green'
+};
 
 const lifeAspects = [
   { value: "Spiritual", color: "yellow", icon: IconHeart },
@@ -186,6 +193,12 @@ const getEmotionName = (value) => {
     return <HiMiniChevronUpDown />;
   };
 
+  const getEmotionCategoryColor = (value) => {
+    const emotion = emotions.find((e) => e._id === value);
+    const categoryName = emotion ? emotion.category : "Unknown";
+    return categoryColors[categoryName];
+  }
+
   if (isLoading) {
     return (
       <Paper
@@ -257,10 +270,11 @@ const getEmotionName = (value) => {
                         </Stack>
                     </Table.Td>
                     <Table.Td>
+                      
                       <Stack>
                       {note?.emotions.map((emotion, index) => (
 
-                          <Badge key={index}>{getEmotionName(emotion)}</Badge>
+                          <Badge key={index} color={getEmotionCategoryColor(emotion)} >{getEmotionName(emotion)}</Badge>
                       ))}
                         </Stack>
                     </Table.Td>
@@ -316,7 +330,7 @@ const getEmotionName = (value) => {
                 ))}
               </Table.Tbody>
             </Table>
-            <Debugger data={emotions} />
+            {/* <Debugger data={emotions} /> */}
             <Center mt="md">
               <Pagination
                 total={Math.ceil(sortedNotes.length / notesPerPage)}

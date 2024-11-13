@@ -2,7 +2,7 @@ const Note = require("../models/notes.js");
 
 // Create a new note
 const createNote = async (req, res) => {
-  const { note, date, rating, lifeAspect, people, tags } = req.body;
+  const { note, date, rating, lifeAspect, people, tags, emotions } = req.body;
   const newNote = new Note({
     note,
     date,

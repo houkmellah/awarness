@@ -1,6 +1,6 @@
 import React from 'react'
 import { useForm } from '@mantine/form';
-import { Button, Select, Stack, Table, Textarea, TextInput } from '@mantine/core';
+import { Button, Select, Stack, Table, Textarea, TextInput, Badge } from '@mantine/core';
 import Debugger from '../debugger';
 import { useMutation, useQueryClient , useQuery } from "@tanstack/react-query";
 import useAuthStore from "../auth/store"
@@ -68,7 +68,13 @@ const Emotions = () => {
     createEmotionMutation.mutate(values);
   }
 
-
+  const categoryColors = {
+    'doute': 'blue',
+    'refus': 'red',
+    'colère': 'orange',
+    'stress': 'yellow',
+    'agréable': 'green'
+  };
 
   return (
     <Stack>
@@ -96,7 +102,11 @@ const Emotions = () => {
         <Table.Tbody>
           {emotions.map((emotion) => (
             <Table.Tr key={emotion._id}>
-              <Table.Td>{emotion.category}</Table.Td>
+              <Table.Td>
+                <Badge color={categoryColors[emotion.category]}>
+                  {emotion.category}
+                </Badge>
+              </Table.Td>
               <Table.Td>{emotion.name}</Table.Td>
               <Table.Td>{emotion.description}</Table.Td>
               <Table.Td>{emotion.message}</Table.Td>

@@ -198,10 +198,12 @@ const FormNotes = ({ note }) => {
             onCreate={handleCreateTag}
           />  */}
           <MultiSelect
+          maxDropdownHeight={200}
             label="Emotions"
             placeholder="Select emotions"
             data={groupedEmotions}
             {...form.getInputProps("emotions")}
+            searchable
           />
           <TagsInput
             label="Tags"
