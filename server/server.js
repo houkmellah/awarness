@@ -9,7 +9,6 @@ const path = require("path"); // Ajoutez cette ligne
 require("dotenv").config();
 
 
-console.log("ORIGIN_URL", process.env.ORIGIN_URL);
 // Create express app
 const app = express();
 
@@ -17,6 +16,7 @@ const app = express();
 app.use((req, res, next) => {
   console.log('Path:', req.path);
   console.log('Origin:', req.get('origin') || 'No origin');
+  console.log("ORIGIN_URL", process.env.ORIGIN_URL);
   next();
 });
 //DB
