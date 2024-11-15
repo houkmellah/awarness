@@ -30,6 +30,14 @@ app.use(
     ],
   })
 );
+
+// Ajouter ce nouveau middleware pour logger l'origine
+app.use((req, res, next) => {
+  console.log('Request Origin:', req.get('origin'));
+  console.log('Request Headers:', req.headers);
+  next();
+});
+
 app.use(express.json());
 app.use(morgan("dev"));
 app.use((req, res, next) => {
