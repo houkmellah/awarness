@@ -32,11 +32,23 @@ app.use(
 );
 
 // Ajouter ce nouveau middleware pour logger l'origine
+// ... existing code ...
+
+// Middleware amélioré pour le logging
 app.use((req, res, next) => {
-  console.log('Request Origin:', req.get('origin'));
-  console.log('Request Headers:', req.headers);
+  console.log('\n--- Request Details ---');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Origin:', req.get('origin') || 'No origin');
+  console.log('Referer:', req.get('referer') || 'No referer');
+  console.log('Host:', req.get('host'));
+  console.log('User-Agent:', req.get('user-agent'));
+  console.log('IP:', req.get('x-forwarded-for') || req.ip);
+  console.log('--------------------\n');
   next();
 });
+
+// ... existing code ...
 
 app.use(express.json());
 app.use(morgan("dev"));
