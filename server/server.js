@@ -7,8 +7,9 @@ const { default: mongoose } = require("mongoose");
 const authMiddleware = require("./middlewares/auth");
 const path = require("path"); // Ajoutez cette ligne
 require("dotenv").config();
-console.log(process.env.DATABASE);
 
+
+console.log("ORIGIN_URL", process.env.ORIGIN_URL);
 // Create express app
 const app = express();
 
