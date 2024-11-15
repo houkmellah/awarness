@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "../../auth/store";
 import EmptyList from "../../ui/emptyList";
 import { apiUrl } from "../../utils/config";
+import useEmotionsStore from "../../emotions/store";
+import Debugger from "../../debugger";
 
 const RATING_COLORS = {
   1: "var(--mantine-color-red-7)",
@@ -25,8 +27,9 @@ const RATING_LABELS = {
 
 const LifeInsightsDashboard = () => {
   const { token } = useAuthStore();
+  const { emotions } = useEmotionsStore();
   const fetchNotes = async () => {
-    const { data } = await axios.get(`${apiUrl}/notes` , {
+    const { data } = await axios.get(`${apiUrl}/notes`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -87,7 +90,7 @@ const LifeInsightsDashboard = () => {
 
   const lifeAspectData = notes.reduce((acc, note) => {
     if (note.lifeAspect && note.rating && Array.isArray(note.lifeAspect)) {
-      note.lifeAspect.forEach(aspect => {
+      note.lifeAspect.forEach((aspect) => {
         if (!acc[aspect]) {
           acc[aspect] = { aspect: aspect };
           sortedRatings.forEach((rating) => {
@@ -137,7 +140,7 @@ const LifeInsightsDashboard = () => {
 
   const peopleData = notes.reduce((acc, note) => {
     if (note.people && Array.isArray(note.people)) {
-      note.people.forEach(person => {
+      note.people.forEach((person) => {
         const personName = `${person.firstName} ${person.secondName}`.trim();
         if (!acc[personName]) {
           acc[personName] = { person: personName };
@@ -153,6 +156,36 @@ const LifeInsightsDashboard = () => {
   }, {});
 
   const peopleChartData = Object.values(peopleData);
+
+  const emotionsData = notes.reduce((acc, note) => {
+    if (note.emotions && Array.isArray(note.emotions)) {
+      note.emotions.forEach((emotionId) => {
+        const emotion = emotions.find((e) => e._id === emotionId);
+        if (emotion) {
+          const emotionName = emotion.name;
+          if (!acc[emotionName]) {
+            acc[emotionName] = {
+              emotion: emotionName,
+              category: emotion.category,
+              count: 0,
+            };
+          }
+          acc[emotionName].count++;
+        }
+      });
+    }
+    return acc;
+  }, {});
+
+  const emotionsChartData = Object.values(emotionsData)
+    .sort((a, b) => {
+      // D'abord trier par catégorie
+      if (a.category !== b.category) {
+        return a.category.localeCompare(b.category);
+      }
+      // Si même catégorie, trier par nom d'émotion
+      return a.emotion.localeCompare(b.emotion);
+    });
 
   return (
     <Stack spacing="xl">
@@ -202,6 +235,26 @@ const LifeInsightsDashboard = () => {
           </Stack>
         </Paper>
       )}
+      {emotionsChartData.length > 0 && (
+        <Paper withBorder>
+          <Stack shadow="xs" p="md" gap="">
+            <Title order={3}>Distribution des Émotions</Title>
+            <BarChart
+              h={300}
+              data={emotionsChartData}
+              dataKey="emotion"
+              series={[
+                { name: "count", dataKey: "count", color: "blue" },
+              ]}
+              tickLine="y"
+              yAxisProps={{ domain: [0, "auto"] }}
+              valueFormatter={(value) => `${value} fois`}
+            />
+          </Stack>
+        </Paper>
+      )}
+
+      <Debugger data={emotionsChartData} />
     </Stack>
   );
 };
