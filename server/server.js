@@ -13,6 +13,12 @@ console.log("ORIGIN_URL", process.env.ORIGIN_URL);
 // Create express app
 const app = express();
 
+// Middleware amélioré pour le logging
+app.use((req, res, next) => {
+  console.log('Path:', req.path);
+  console.log('Origin:', req.get('origin') || 'No origin');
+  next();
+});
 //DB
 mongoose
   .connect(process.env.DATABASE, {
@@ -34,19 +40,6 @@ app.use(
 // Ajouter ce nouveau middleware pour logger l'origine
 // ... existing code ...
 
-// Middleware amélioré pour le logging
-app.use((req, res, next) => {
-  console.log('\n--- Request Details ---');
-  console.log('Method:', req.method);
-  console.log('Path:', req.path);
-  console.log('Origin:', req.get('origin') || 'No origin');
-  console.log('Referer:', req.get('referer') || 'No referer');
-  console.log('Host:', req.get('host'));
-  console.log('User-Agent:', req.get('user-agent'));
-  console.log('IP:', req.get('x-forwarded-for') || req.ip);
-  console.log('--------------------\n');
-  next();
-});
 
 // ... existing code ...
 
