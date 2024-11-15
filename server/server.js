@@ -25,9 +25,12 @@ mongoose
 // Apply middlewares
 app.use(
   cors({
-    origin: [
-      process.env.ORIGIN_URL,
-    ],
+    origin: process.env.ORIGIN_URL,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
   })
 );
 app.use(express.json());
