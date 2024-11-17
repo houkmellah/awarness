@@ -23,41 +23,23 @@ import DeleteNote from "../deleteNote";
 import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "../../auth/store";
 import usePeopleStore from "../../people/addPerson/store/usePeopleStore";
-import {
-  IconHeart,
-  IconBrain,
-  IconBarbell,
-  IconStethoscope,
-  IconUsers,
-  IconBriefcase,
-  IconFriends,
-  IconBeach,
-  IconClipboardList,
-  IconHeartHandshake,
-} from "@tabler/icons-react";
+import useEmotionsStore from "../../emotions/store"
+
 import UpdateNote from "../updateNote";
 import getInitials from "../../utils/getInitials";
 import EmptyList from "../../ui/emptyList";
 import { fetchPeople } from "../../people/api/fetchPeople";
 import { apiUrl } from "../../utils/config";
-import Debugger from "../../debugger";
+import { lifeAspects } from "../../utils/data";
+const categoryColors = {
+  'doute': 'blue',
+  'refus': 'orange',
+  'colère': 'red',
+  'stress': 'yellow',
+  'agréable': 'green'
+};
 
-const lifeAspects = [
-  { value: "Spiritual", color: "yellow", icon: IconHeart },
-  {
-    value: "Personnal-growth / Self Improvement",
-    color: "cyan",
-    icon: IconBrain,
-  },
-  { value: "Fitness", color: "orange", icon: IconBarbell },
-  { value: "Health", color: "green", icon: IconStethoscope },
-  { value: "Family", color: "pink", icon: IconUsers },
-  { value: "Career", color: "grape", icon: IconBriefcase },
-  { value: "Social", color: "purple", icon: IconFriends },
-  { value: "Leisure", color: "orange", icon: IconBeach },
-  { value: "Life Management", color: "indigo", icon: IconClipboardList },
-  { value: "Love PartnerShip", color: "red", icon: IconHeartHandshake },
-];
+
 
 const LifeAspectBadge = ({ aspect }) => {
   const aspectInfo = lifeAspects.find((a) => a.value === aspect);
@@ -91,6 +73,7 @@ const ListNotes = () => {
   let people;
 
   const { people: peopleFromStore, setPeople } = usePeopleStore();
+  const { emotions } = useEmotionsStore();
   const {
     data: peopleFromQuery = [],
     isError: isPeopleError,
@@ -169,7 +152,10 @@ const ListNotes = () => {
           : "ascending",
     }));
   };
-
+const getEmotionName = (value) => {
+  const emotion = emotions.find((e) => e._id === value);
+  return emotion ? emotion.name : "Unknown";
+}
   const renderSortIcon = (key) => {
     if (sortConfig.key === key) {
       return sortConfig.direction === "ascending" ? (
@@ -180,6 +166,12 @@ const ListNotes = () => {
     }
     return <HiMiniChevronUpDown />;
   };
+
+  const getEmotionCategoryColor = (value) => {
+    const emotion = emotions.find((e) => e._id === value);
+    const categoryName = emotion ? emotion.category : "Unknown";
+    return categoryColors[categoryName];
+  }
 
   if (isLoading) {
     return (
@@ -229,6 +221,9 @@ const ListNotes = () => {
                   <Table.Th onClick={() => onSort("lifeAspect")}>
                     Life Aspect {renderSortIcon("lifeAspect")}
                   </Table.Th>
+                  <Table.Th onClick={() => onSort("emotions")}>
+                    Emotions {renderSortIcon("emotions")}
+                  </Table.Th>
                   <Table.Th>People</Table.Th>
                   <Table.Th></Table.Th>
                 </Table.Tr>
@@ -248,6 +243,15 @@ const ListNotes = () => {
                         </Group>
                         </Stack>
                     </Table.Td>
+                    <Table.Td>
+                      
+                      <Stack>
+                      {note?.emotions.map((emotion, index) => (
+
+                          <Badge key={index} color={getEmotionCategoryColor(emotion)} >{getEmotionName(emotion)}</Badge>
+                      ))}
+                        </Stack>
+                    </Table.Td>
                     <Table.Td visibleFrom="md">
                       {format(new Date(note.date), "eeee dd MMM")}
                     </Table.Td>
@@ -261,6 +265,7 @@ const ListNotes = () => {
                     <Table.Td>
                       <LifeAspectBadges aspects={note.lifeAspect} />
                     </Table.Td>
+                    
                     <Table.Td>
                       <Avatar.Group spacing="sm">
                         {note?.people?.map((person) => {
@@ -299,6 +304,7 @@ const ListNotes = () => {
                 ))}
               </Table.Tbody>
             </Table>
+            {/* <Debugger data={emotions} /> */}
             <Center mt="md">
               <Pagination
                 total={Math.ceil(sortedNotes.length / notesPerPage)}
