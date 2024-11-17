@@ -163,7 +163,7 @@ const Auth = () => {
       <Group position="center" mt="md">
         {mode === "login" && (
           <>
-            <Text size="sm">Don't have an account?</Text>
+            <Text size="sm">{"Don't have an account?"}</Text>
             <Button
               variant="subtle"
               size="sm"

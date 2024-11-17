@@ -7,11 +7,18 @@ const { default: mongoose } = require("mongoose");
 const authMiddleware = require("./middlewares/auth");
 const path = require("path"); // Ajoutez cette ligne
 require("dotenv").config();
-console.log(process.env.DATABASE);
+
 
 // Create express app
 const app = express();
 
+// Middleware amélioré pour le logging
+app.use((req, res, next) => {
+  console.log('Path:', req.path);
+  console.log('Origin:', req.get('origin') || 'No origin');
+  console.log("ORIGIN_URL", process.env.ORIGIN_URL);
+  next();
+});
 //DB
 mongoose
   .connect(process.env.DATABASE, {
@@ -25,10 +32,17 @@ mongoose
 app.use(
   cors({
     origin: [
-     process.env.ORIGIN_URL ,
+      process.env.ORIGIN_URL,
     ],
   })
 );
+
+// Ajouter ce nouveau middleware pour logger l'origine
+// ... existing code ...
+
+
+// ... existing code ...
+
 app.use(express.json());
 app.use(morgan("dev"));
 app.use((req, res, next) => {
