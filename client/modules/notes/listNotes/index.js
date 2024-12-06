@@ -212,6 +212,9 @@ const getEmotionName = (value) => {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th w="40%">Note</Table.Th>
+                  <Table.Th onClick={() => onSort("emotions")}>
+                    Emotions {renderSortIcon("emotions")}
+                  </Table.Th>
                   <Table.Th onClick={() => onSort("date")}>
                     Date {renderSortIcon("date")}
                   </Table.Th>
@@ -220,9 +223,6 @@ const getEmotionName = (value) => {
                   </Table.Th>
                   <Table.Th onClick={() => onSort("lifeAspect")}>
                     Life Aspect {renderSortIcon("lifeAspect")}
-                  </Table.Th>
-                  <Table.Th onClick={() => onSort("emotions")}>
-                    Emotions {renderSortIcon("emotions")}
                   </Table.Th>
                   <Table.Th>People</Table.Th>
                   <Table.Th></Table.Th>
