@@ -106,15 +106,19 @@ const LifeInsightsDashboard = () => {
           sortedRatings.forEach((rating) => {
             acc[aspect][RATING_LABELS[rating]] = 0;
           });
+          acc[aspect].total = 0;
         }
         const ratingKey = RATING_LABELS[note.rating];
         acc[aspect][ratingKey]++;
+        acc[aspect].total++;
       });
     }
     return acc;
   }, {});
 
-  const lifeAspectChartData = Object.values(lifeAspectData);
+  const lifeAspectChartData = Object.values(lifeAspectData)
+    .sort((a, b) => b.total - a.total)
+    .map(({ total, ...rest }) => rest);
 
   const series = sortedRatings.map((rating) => ({
     name: RATING_LABELS[rating],
@@ -125,12 +129,16 @@ const LifeInsightsDashboard = () => {
   const emotionTimelineData = notes
     .filter((note) => note.date && note.rating)
     .reduce((acc, note) => {
-      const date = new Date(note.date).toLocaleDateString("en-US", {
+      const dateObj = new Date(note.date);  // Créer un objet Date
+      const date = dateObj.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       });
       if (!acc[date]) {
-        acc[date] = { date };
+        acc[date] = { 
+          date,
+          originalDate: dateObj, // Stocker la date originale pour le tri
+        };
         sortedRatings.forEach((rating) => {
           acc[date][RATING_LABELS[rating]] = 0;
         });
@@ -139,9 +147,9 @@ const LifeInsightsDashboard = () => {
       return acc;
     }, {});
 
-  const emotionTimelineChartData = Object.values(emotionTimelineData).sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
-  );
+  const emotionTimelineChartData = Object.values(emotionTimelineData)
+    .sort((a, b) => a.originalDate - b.originalDate)
+    .map(({ originalDate, ...rest }) => rest); // Retirer originalDate avant l'affichage
 
   const emotionSeries = sortedRatings.map((rating) => ({
     name: RATING_LABELS[rating],
