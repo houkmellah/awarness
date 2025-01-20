@@ -126,14 +126,25 @@ const ListNotes = () => {
             : new Date(b.date) - new Date(a.date);
         }
         if (sortConfig.key === "lifeAspect") {
-          // Sort by the first life aspect in the array
           const aAspect = a.lifeAspect[0] || "";
           const bAspect = b.lifeAspect[0] || "";
           return sortConfig.direction === "ascending"
             ? aAspect.localeCompare(bAspect)
             : bAspect.localeCompare(aAspect);
         }
-        // ... rest of the sorting logic ...
+        if (sortConfig.key === "emotions") {
+          const aEmotion = a.emotions[0] || "";
+          const bEmotion = b.emotions[0] || "";
+          return sortConfig.direction === "ascending"
+            ? aEmotion.localeCompare(bEmotion)
+            : bEmotion.localeCompare(aEmotion);
+        }
+        if (sortConfig.key === "rating") {
+          return sortConfig.direction === "ascending"
+            ? (a.rating || 0) - (b.rating || 0)
+            : (b.rating || 0) - (a.rating || 0);
+        }
+        return 0;
       });
     }
     return sortedData;

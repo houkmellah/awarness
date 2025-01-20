@@ -24,14 +24,17 @@ const register = async (req, res) => {
     });
     res.status(201).json({ token, userId: user._id });
   } catch (error) {
+    console.log("Error ===========>", error)
     res.status(500).json({ message: error.message });
   }
 };
 
 const login = async (req, res) => {
+  console.log("Req Body ===========>", req.body)
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
+    console.log("User ===========>", user)
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -44,6 +47,7 @@ const login = async (req, res) => {
     });
     res.json({ token, userId: user._id, email: user.email, name: user.name });
   } catch (error) {
+    console.log("Error ===========>", error)
     res.status(500).json({ message: error.message });
   }
 };
