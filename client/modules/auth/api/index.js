@@ -18,7 +18,6 @@ export const register = (name, email, password) => {
 };
 
 export const login = (email, password) => {
-  console.log("API LOGIN", process.env.NEXT_PUBLIC_API_URL);
   return api.post("/login", { email, password });
 };
 

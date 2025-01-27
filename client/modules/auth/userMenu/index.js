@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import useAuthStore from "../store";
 import { Avatar, Button, Group, Menu , Text } from "@mantine/core";
@@ -8,23 +8,36 @@ import getInitials from "../../utils/getInitials";
 
 const UserMenu = () => {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const { user, logout } = useAuthStore();
-  console.log("User ======>", user);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = () => {
-    router.push("/auth");
     logout();
+    router.push("/auth");
   };
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
-    <Menu>
+    <Menu shadow="md" width={200}>
       <Menu.Target>
-        <Button variant="default">
-          <Group>
-            <Avatar radius="xl" size={30}>
-              {getInitials(`${user.name} `)}
+        <Button variant="subtle">
+          <Group gap={7}>
+            <Avatar
+              size={20}
+              radius="xl"
+              variant="filled"
+              color="blue"
+            >
+              {user?.name ? getInitials(user.name) : ""}
             </Avatar>
-            <Text visibleFrom="md">
+            <Text size="sm" fw={500}>
               {user?.name}
             </Text>
           </Group>

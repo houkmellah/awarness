@@ -16,6 +16,8 @@ import ListPeople from "../../../people/addPerson/listPeople";
 import useAuthStore from "../../../auth/store";
 import { Debugger } from "../../../debugger";
 import { apiUrl } from "../../../utils/config";
+import AddEgo from "../../../ego/addEgo";
+import useExpectationStore from "../../../expectations/store";
 
 const FormNotes = ({ note }) => {
   const queryClient = useQueryClient();
@@ -35,6 +37,13 @@ const FormNotes = ({ note }) => {
     "Love PartnerShip",
   ];
 
+  const {expectations} = useExpectationStore()
+  const expectationsData = expectations.map(expectation => ({
+    value: expectation._id,
+    label: expectation.name
+  }))
+  // console.log(expectations)
+
   const form = useForm({
     initialValues: {
       note: note?.note ?? "",
@@ -44,6 +53,7 @@ const FormNotes = ({ note }) => {
       people: note?.people ?? [],
       tags: note?.tags ?? [],
       emotions: note?.emotions ?? [],
+      expectations: note?.expectations ?? [],
     },
   });
 
@@ -205,6 +215,13 @@ const FormNotes = ({ note }) => {
             {...form.getInputProps("emotions")}
             searchable
           />
+          <MultiSelect
+            label="Expectations"
+            placeholder="Select expectations"
+            data={expectationsData}
+            {...form.getInputProps("expectations")}
+            searchable
+          />
           <TagsInput
             label="Tags"
             placeholder="Select or create tags"
@@ -223,6 +240,7 @@ const FormNotes = ({ note }) => {
               onChange={(value) => form.setFieldValue("rating", value)}
             />
           </Center>
+          <AddEgo />
           <Button
             type="submit"
             loading={

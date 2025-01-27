@@ -14,9 +14,9 @@ const app = express();
 
 // Middleware amélioré pour le logging
 app.use((req, res, next) => {
-  console.log('Path:', req.path);
-  console.log('Origin:', req.get('origin') || 'No origin');
-  console.log("ORIGIN_URL", process.env.ORIGIN_URL);
+  // console.log('Path:', req.path);
+  // console.log('Origin:', req.get('origin') || 'No origin');
+  // console.log("ORIGIN_URL", process.env.ORIGIN_URL);
   next();
 });
 //DB
@@ -53,6 +53,7 @@ const routesPath = path.join(__dirname, "routes");
 if (fs.existsSync(routesPath)) {
   fs.readdirSync(routesPath).forEach((r) => {
     try {
+      console.log("r", r);
       const route = require(path.join(routesPath, r));
 
       // Créer un nouveau router pour ce fichier de route

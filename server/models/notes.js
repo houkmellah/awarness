@@ -37,7 +37,12 @@ const noteSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  }
+  },
+  expectations: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Expectation',
+    required: false
+  }]
 }, {
   timestamps: true
 });
