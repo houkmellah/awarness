@@ -21,7 +21,6 @@ const Emotions = () => {
     queryKey: ["ListPeople"],
     queryFn: () => fetchEmotions(token),
     onSuccess: (data) => {
-      console.log(data)
       setEmotions(data);
     },
     enabled: !!token,

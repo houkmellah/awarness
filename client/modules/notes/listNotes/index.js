@@ -31,6 +31,7 @@ import EmptyList from "../../ui/emptyList";
 import { fetchPeople } from "../../people/api/fetchPeople";
 import { apiUrl } from "../../utils/config";
 import { lifeAspects } from "../../utils/data";
+import AddEgo from "../../ego/addEgo";
 const categoryColors = {
   'doute': 'blue',
   'refus': 'orange',
@@ -92,7 +93,6 @@ const ListNotes = () => {
 
   const fetchNotes = async () => {
     try {
-      console.log("Token ======>", token);
       const { data } = await axios.get(`${apiUrl}/notes`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -308,6 +308,7 @@ const getEmotionName = (value) => {
                           setNotification={setNotification}
                           refetch={refetch}
                         />
+                        <AddEgo note={note} />
                       </Group>
                     </Table.Td>
                     {/* <Debugger data={note} /> */}
