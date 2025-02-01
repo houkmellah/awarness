@@ -1,8 +1,8 @@
 const Expectation = require("../models/expectation.js");
 
 const createExpectation = async (req, res) => {
-    const { name , createdBy } = req.body;
-    const expectation = await Expectation.create({ name , createdBy });
+    const { name , reason, createdBy } = req.body;
+    const expectation = await Expectation.create({ name , reason, createdBy });
     res.status(200).json(expectation);
 }
 
@@ -14,8 +14,8 @@ const createExpectation = async (req, res) => {
 
  const updateExpectation = async (req, res) => {
     const { id } = req.params;
-    const { name } = req.body;
-    const expectation = await Expectation.findByIdAndUpdate(id, { name });
+    const { name, reason } = req.body;
+    const expectation = await Expectation.findByIdAndUpdate(id, { name, reason });
     res.status(200).json(expectation);
 }
 

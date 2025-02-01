@@ -32,6 +32,8 @@ import { fetchPeople } from "../../people/api/fetchPeople";
 import { apiUrl } from "../../utils/config";
 import { lifeAspects } from "../../utils/data";
 import AddEgo from "../../ego/addEgo";
+import Debugger from "../../debugger";
+import useExpectationStore from "../../expectations/store";
 const categoryColors = {
   'doute': 'blue',
   'refus': 'orange',
@@ -62,6 +64,7 @@ const LifeAspectBadge = ({ aspect }) => {
 
 const ListNotes = () => {
   const [notification, setNotification] = useState(null);
+  const {expectations} = useExpectationStore();    
   const { token, userId } = useAuthStore((state) => ({
     token: state.token,
     userId: state.user?.id,
@@ -251,6 +254,11 @@ const getEmotionName = (value) => {
                               {tag}
                             </Badge>
                           ))}
+                          {note?.expectations.map((expectation) => (
+                            <Badge key={expectation._id} variant="filled" variant="outline" color="blue" >
+                              {expectations.find((e) => e._id === expectation)?.name}
+                            </Badge>
+                          ))}
                         </Group>
                         </Stack>
                     </Table.Td>
@@ -311,7 +319,7 @@ const getEmotionName = (value) => {
                         <AddEgo note={note} />
                       </Group>
                     </Table.Td>
-                    {/* <Debugger data={note} /> */}
+                    {/* <Debugger data={note?.expectations} /> */}
                   </Table.Tr>
                 ))}
               </Table.Tbody>

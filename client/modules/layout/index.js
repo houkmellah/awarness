@@ -19,6 +19,7 @@ const pages = [
   { name: "Notes", path: "/notes", icon: MdOutlineNotes },
   { name : "Emotions", path : "/emotions", icon : MdOutlineMood },
   { name : "Expectations", path : "/expectations", icon : MdInterests },
+  { name : "Claims", path : "/claims", icon : MdOutlineMood },
 ];
 
 export function Layout({ children }) {
@@ -89,7 +90,7 @@ export function Layout({ children }) {
                   size={25}
                   color={isSelected ? "blue" : "black"}
                 />
-                <Title  order={6} c={isSelected ? "blue" : undefined}>
+                <Title  order={6} c={isSelected ? "blue" : undefined} > 
                   {page.name}
                 </Title>
               </Group>
