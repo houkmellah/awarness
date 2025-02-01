@@ -1,27 +1,49 @@
-import { Button, Modal, Stack, TextInput } from "@mantine/core";
+import { Button, Modal, Stack, Textarea, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import useAuthStore from "../../auth/store";
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { apiUrl } from "../../utils/config";
+import FormExpectation from "../formExpectation";
+import { TfiPencil } from "react-icons/tfi";
+import { ActionIcon } from "@mantine/core";
 
-const AddExpectation = () => {
+const AddExpectation = ({expectation}) => {
 const [opened , { open : openExpectationModal, close : closeExpectationModal}] = useDisclosure(false)
-const {token , user} = useAuthStore()
+const {token } = useAuthStore()
 const queryClient = useQueryClient()
+const {user} = useAuthStore()
+const {name, reason, createdBy} = expectation || {}
 const form = useForm({
     initialValues: {
-        name: "",
-        createdBy: user.id,
+        name: name || "",
+        reason: reason || "",
+        createdBy: createdBy || user.id,
     },
 });
-const {mutate: addExpectation } = useMutation({
-    mutationFn: (data) => axios.post(`${apiUrl}/expectations`, data, {
+
+const updateExpectation = useMutation({
+    mutationFn: (data) => 
+        axios.put(`${apiUrl}/expectations/${expectation._id}`, data, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
     }),
+});
+
+const createExpectation = useMutation({
+    mutationFn: (data) => 
+        axios.post(`${apiUrl}/expectations`, data, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }),
+});
+
+const {mutate: addExpectation } = useMutation({
+    mutationFn: (data) => 
+        expectation ? updateExpectation.mutate(data) : createExpectation.mutate(data),
     onSuccess: () => {
         queryClient.invalidateQueries(["listExpectationsByUser"])
         closeExpectationModal()
@@ -32,13 +54,13 @@ const {mutate: addExpectation } = useMutation({
     <>
     <Modal opened={opened} onClose={closeExpectationModal} title="Add Expectation">
         <Stack>
-        <form>
-            <TextInput label="Name" placeholder="Name" {...form.getInputProps('name')} />
-        </form>
+            <FormExpectation form={form} />
         <Button onClick={() => addExpectation(form.values)}>Add Expectation</Button>
         </Stack>
     </Modal>
-    <Button onClick={openExpectationModal}>Add Expectation</Button>
+    {expectation ? <ActionIcon onClick={openExpectationModal}>
+                        <TfiPencil  />
+                    </ActionIcon> : <Button onClick={openExpectationModal}>Add Expectation</Button>}
     </>
 )
 }
