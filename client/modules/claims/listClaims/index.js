@@ -1,13 +1,11 @@
 import React from "react";
-import Debugger from "../../debugger";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "../../auth/store";
 import useClaimStore from "../store";
 import { useEffect } from "react";
-import { ActionIcon, Button, Table, Group } from "@mantine/core";
+import {  Table, Group } from "@mantine/core";
 import { format } from "date-fns";
-import { TfiPencil } from "react-icons/tfi";
 import AddClaim from "../addAndUpdateClaim";
 import DeleteClaim from "../deleteClaim";
 import { apiUrl } from "../../utils/config";

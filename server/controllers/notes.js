@@ -2,7 +2,7 @@ const Note = require("../models/notes.js");
 
 // Create a new note
 const createNote = async (req, res) => {
-  const { note, date, rating, lifeAspect, people, tags, emotions , expectations} = req.body;
+  const { note, date, rating, lifeAspect, people, tags, emotions , expectations , claims} = req.body;
   const newNote = new Note({
     note,
     date,
@@ -13,6 +13,7 @@ const createNote = async (req, res) => {
     user: req.userId,
       emotions,
     expectations,
+claims
   });
 
   try {
@@ -72,11 +73,11 @@ const deleteNote = async (req, res) => {
 
 // Update a note
 const updateNote = async (req, res) => {
-  const { note, date, rating, lifeAspect, people, tags, emotions , expectations} = req.body;
+  const { note, date, rating, lifeAspect, people, tags, emotions , expectations , claims} = req.body;
   try {
     const updatedNote = await Note.findOneAndUpdate(
       { _id: req.params.id, user: req.userId},
-      { note, date, rating, lifeAspect, people, tags, emotions, expectations},
+      { note, date, rating, lifeAspect, people, tags, emotions, expectations , claims},
       { new: true }
     );
     if (!updatedNote) {

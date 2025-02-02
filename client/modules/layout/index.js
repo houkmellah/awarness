@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { AppShell, Burger, Group, Box, Stack, Image, Center, Title } from "@mantine/core";
+import {
+  AppShell,
+  Burger,
+  Group,
+  Box,
+  Stack,
+  Image,
+  Center,
+  Title,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import AddNote from "../notes/addNote";
 import { BsPeople } from "react-icons/bs";
-import { MdInterests, MdOutlineMood, MdOutlineNotes  } from "react-icons/md";
+import { MdInterests, MdOutlineMood, MdOutlineMoodBad, MdOutlineNotes } from "react-icons/md";
 import { MdDashboard } from "react-icons/md";
 import { useRouter } from "next/router";
 import AddPerson from "../people/addPerson";
@@ -17,9 +26,10 @@ const pages = [
   { name: "Dashboard", path: "/", icon: MdDashboard },
   { name: "People", path: "/people", icon: BsPeople },
   { name: "Notes", path: "/notes", icon: MdOutlineNotes },
-  { name : "Emotions", path : "/emotions", icon : MdOutlineMood },
-  { name : "Expectations", path : "/expectations", icon : MdInterests },
-  { name : "Claims", path : "/claims", icon : MdOutlineMood },
+  { name: "Emotions", path: "/emotions", icon: MdOutlineMood },
+  { name: "Expectations", path: "/expectations", icon: MdInterests },
+  { name: "Claims", path: "/claims", icon: MdOutlineMood },
+  { name: "Fears", path: "/fears", icon: MdOutlineMoodBad },
 ];
 
 export function Layout({ children }) {
@@ -59,8 +69,7 @@ export function Layout({ children }) {
               size="sm"
             />
             <Center px="md">
-
-            <Image src={"logo.png"} w={"80px"} h={"100%"} />
+              <Image src={"logo.png"} w={"80px"} h={"100%"} />
             </Center>
           </Group>
           <Group>
@@ -69,7 +78,7 @@ export function Layout({ children }) {
                 {router.pathname === "/people" && <AddPerson />}
                 {router.pathname === "/notes" && <AddNote />}
                 {user?.name && <UserMenu mobileOpened={mobileOpened} />}
-                {router.pathname === "/expectations" && <AddExpectation/>}
+                {router.pathname === "/expectations" && <AddExpectation />}
               </>
             )}
           </Group>
@@ -90,7 +99,7 @@ export function Layout({ children }) {
                   size={25}
                   color={isSelected ? "blue" : "black"}
                 />
-                <Title  order={6} c={isSelected ? "blue" : undefined} > 
+                <Title order={6} c={isSelected ? "blue" : undefined}>
                   {page.name}
                 </Title>
               </Group>
