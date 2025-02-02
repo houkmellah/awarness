@@ -1,5 +1,5 @@
 import React from 'react'
-import Emotions from '../../modules/emotions'
+import Emotions from '../../modules/emotions/listEmotions'
 
 const index = () => {
   return (

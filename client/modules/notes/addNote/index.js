@@ -8,7 +8,7 @@ const AddNote = () => {
   const [opened, { open, close }] = useDisclosure(false);
   return (
     <>
-      <Modal opened={opened} onClose={close} title="Add Note" size={"lg"}>
+      <Modal opened={opened} onClose={close} title="Add Note" size={"55rem"}>
         <FormNotes close={close} />
       </Modal>
       <Button

@@ -23,7 +23,7 @@ import DeleteNote from "../deleteNote";
 import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "../../auth/store";
 import usePeopleStore from "../../people/addPerson/store/usePeopleStore";
-import useEmotionsStore from "../../emotions/store"
+import useEmotionsStore from "../../emotions/store";
 
 import UpdateNote from "../updateNote";
 import getInitials from "../../utils/getInitials";
@@ -35,14 +35,12 @@ import AddEgo from "../../ego/addEgo";
 import Debugger from "../../debugger";
 import useExpectationStore from "../../expectations/store";
 const categoryColors = {
-  'doute': 'blue',
-  'refus': 'orange',
-  'colère': 'red',
-  'stress': 'yellow',
-  'agréable': 'green'
+  doute: "blue",
+  refus: "orange",
+  colère: "red",
+  stress: "yellow",
+  agréable: "green",
 };
-
-
 
 const LifeAspectBadge = ({ aspect }) => {
   const aspectInfo = lifeAspects.find((a) => a.value === aspect);
@@ -64,7 +62,7 @@ const LifeAspectBadge = ({ aspect }) => {
 
 const ListNotes = () => {
   const [notification, setNotification] = useState(null);
-  const {expectations} = useExpectationStore();    
+  const { expectations } = useExpectationStore();
   const { token, userId } = useAuthStore((state) => ({
     token: state.token,
     userId: state.user?.id,
@@ -80,8 +78,7 @@ const ListNotes = () => {
   const { emotions } = useEmotionsStore();
   const {
     data: peopleFromQuery = [],
-    isError: isPeopleError,
-    isLoading: isPeopleLoading,
+    
   } = useQuery({
     queryKey: ["people", userId],
     queryFn: () => fetchPeople(token),
@@ -166,10 +163,10 @@ const ListNotes = () => {
           : "ascending",
     }));
   };
-const getEmotionName = (value) => {
-  const emotion = emotions.find((e) => e._id === value);
-  return emotion ? emotion.name : "Unknown";
-}
+  const getEmotionName = (value) => {
+    const emotion = emotions.find((e) => e._id === value);
+    return emotion ? emotion.name : "Unknown";
+  };
   const renderSortIcon = (key) => {
     if (sortConfig.key === key) {
       return sortConfig.direction === "ascending" ? (
@@ -185,7 +182,7 @@ const getEmotionName = (value) => {
     const emotion = emotions.find((e) => e._id === value);
     const categoryName = emotion ? emotion.category : "Unknown";
     return categoryColors[categoryName];
-  }
+  };
 
   if (isLoading) {
     return (
@@ -249,27 +246,41 @@ const getEmotionName = (value) => {
                       <Stack>
                         {note.note}
                         <Group>
-                          {note.tags.map((tag) => (
-                            <Badge key={tag._id} variant="filled" variant="outline" color="gray" >
+                          {note.tags.map((tag, index) => (
+                            <Badge
+                              key={`tag-${index}-${tag}`}
+                              variant="outline"
+                              color="gray"
+                            >
                               {tag}
                             </Badge>
                           ))}
                           {note?.expectations.map((expectation) => (
-                            <Badge key={expectation._id} variant="filled" variant="outline" color="blue" >
-                              {expectations.find((e) => e._id === expectation)?.name}
+                            <Badge
+                              key={`expectation-${expectation}`}
+                              variant="outline"
+                              color="blue"
+                            >
+                              {
+                                expectations.find((e) => e._id === expectation)
+                                  ?.name
+                              }
                             </Badge>
                           ))}
                         </Group>
-                        </Stack>
+                      </Stack>
                     </Table.Td>
                     <Table.Td>
-                      
                       <Stack>
-                      {note?.emotions.map((emotion, index) => (
-
-                          <Badge key={index} color={getEmotionCategoryColor(emotion)} >{getEmotionName(emotion)}</Badge>
-                      ))}
-                        </Stack>
+                        {note?.emotions.map((emotion, index) => (
+                          <Badge
+                            key={index}
+                            color={getEmotionCategoryColor(emotion)}
+                          >
+                            {getEmotionName(emotion)}
+                          </Badge>
+                        ))}
+                      </Stack>
                     </Table.Td>
                     <Table.Td visibleFrom="md">
                       {format(new Date(note.date), "eeee dd MMM")}
@@ -284,7 +295,7 @@ const getEmotionName = (value) => {
                     <Table.Td>
                       <LifeAspectBadges aspects={note.lifeAspect} />
                     </Table.Td>
-                    
+
                     <Table.Td>
                       <Avatar.Group spacing="sm">
                         {note?.people?.map((person) => {
@@ -335,7 +346,6 @@ const getEmotionName = (value) => {
           </>
         )}
       </Stack>
-      
     </>
   );
 };

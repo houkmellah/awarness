@@ -8,14 +8,15 @@ import axios from "axios";
 import { apiUrl } from "../../utils/config";
 import { TfiPencil } from "react-icons/tfi";
 import { ActionIcon } from "@mantine/core";
+import Debugger from "../../debugger";
 
-const AddClaim = ({ claim }) => {
-  const [opened, { open: openClaimModal, close: closeClaimModal }] =
+const AddAndUpdateFear = ({ fear }) => {
+  const [opened, { open: openfearModal, close: closefearModal }] =
     useDisclosure(false);
   const { token } = useAuthStore();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const { title, description, createdBy } = claim || {};
+  const { title, description, createdBy } = fear || {};
 
   const form = useForm({
     initialValues: {
@@ -25,55 +26,64 @@ const AddClaim = ({ claim }) => {
     },
   });
 
-  const updateClaim = useMutation({
+  const updatefear = useMutation({
     mutationFn: (data) =>
-      axios.put(`${apiUrl}/claims/${claim._id}`, data, {
+      axios.put(`${apiUrl}/fears/${fear._id}`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }),
   });
 
-  const createClaim = useMutation({
+  const createfear = useMutation({
     mutationFn: (data) =>
-      axios.post(`${apiUrl}/claims`, data, {
+      axios.post(`${apiUrl}/fears`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }),
   });
 
-  const { mutate: addClaim } = useMutation({
+  const {
+    mutate: addfear,
+    isError,
+    error,
+  } = useMutation({
     mutationFn: (data) =>
-      claim ? updateClaim.mutate(data) : createClaim.mutate(data),
+      fear ? updatefear.mutate(data) : createfear.mutate(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["listClaimsByUser"]);
-      closeClaimModal();
+      queryClient.invalidateQueries(["listfearsByUser"]);
+      closefearModal();
       form.reset();
+    },
+    onError: (error) => {
+      console.error("Erreur lors de l'opération:", error);
+      // Vous pouvez ajouter ici une notification d'erreur avec @mantine/notifications
     },
   });
 
   return (
     <>
-      <Modal opened={opened} onClose={closeClaimModal} title="Add Claim">
+      <Modal opened={opened} onClose={closefearModal} title="Add fear">
         <Stack>
           <TextInput label="Title" {...form.getInputProps("title")} />
           <Textarea
             label="Description"
             {...form.getInputProps("description")}
           />
-          <Button onClick={() => addClaim(form.values)}>Add Claim</Button>
+          <Button onClick={() => addfear(form.values)}>Add fear</Button>
         </Stack>
+        <Debugger data={form.values} />
       </Modal>
-      {claim ? (
-        <ActionIcon onClick={openClaimModal}>
+      {fear ? (
+        <ActionIcon onClick={openfearModal}>
           <TfiPencil />
         </ActionIcon>
       ) : (
-        <Button onClick={openClaimModal}>Add Claim</Button>
+        <Button onClick={openfearModal}>Add fear</Button>
       )}
     </>
   );
 };
 
-export default AddClaim;
+export default AddAndUpdateFear;

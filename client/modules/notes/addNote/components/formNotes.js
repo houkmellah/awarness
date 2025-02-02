@@ -14,10 +14,10 @@ import axios from "axios";
 import EmojiRating from "./emojiRating";
 import ListPeople from "../../../people/addPerson/listPeople";
 import useAuthStore from "../../../auth/store";
-import { Debugger } from "../../../debugger";
 import { apiUrl } from "../../../utils/config";
 import AddEgo from "../../../ego/addEgo";
 import useExpectationStore from "../../../expectations/store";
+import useClaimStore from "../../../claims/store";
 
 const FormNotes = ({ note }) => {
   const queryClient = useQueryClient();
@@ -37,11 +37,19 @@ const FormNotes = ({ note }) => {
     "Love PartnerShip",
   ];
 
-  const {expectations} = useExpectationStore()
-  const expectationsData = expectations.map(expectation => ({
+  const { expectations } = useExpectationStore();
+  const { claims } = useClaimStore();
+  console.log("Claims ===>", claims);
+  const expectationsData = expectations.map((expectation) => ({
     value: expectation._id,
-    label: expectation.name
-  }))
+    label: expectation.name,
+  }));
+  const claimsData = claims.map((claim) => ({
+    value: claim._id,
+    label: claim.title,
+  }));
+
+  console.log("Claim Data ====>", claimsData);
   // console.log(expectations)
 
   const form = useForm({
@@ -54,6 +62,7 @@ const FormNotes = ({ note }) => {
       tags: note?.tags ?? [],
       emotions: note?.emotions ?? [],
       expectations: note?.expectations ?? [],
+      claims: note?.claims ?? [],
     },
   });
 
@@ -78,7 +87,7 @@ const FormNotes = ({ note }) => {
       console.error("Failed to create note:", error);
     },
   });
-  
+
   const updateNoteMutation = useMutation({
     mutationFn: (values) =>
       axios.put(
@@ -159,10 +168,7 @@ const FormNotes = ({ note }) => {
       throw error;
     }
   };
-  const {
-    data: emotions = [],
-
-  } = useQuery({
+  const { data: emotions = [] } = useQuery({
     queryKey: ["ListPeople"],
     queryFn: () => fetchEmotions(token),
     enabled: !!token,
@@ -170,19 +176,19 @@ const FormNotes = ({ note }) => {
 
   const groupedEmotions = Object.values(
     emotions.reduce((acc, emotion) => {
-        if (!acc[emotion.category]) {
-            acc[emotion.category] = {
-                group: emotion.category,
-                items: []
-            };
-        }
-        acc[emotion.category].items.push({
-            value: emotion._id,
-            label: emotion.name
-        });
-        return acc;
+      if (!acc[emotion.category]) {
+        acc[emotion.category] = {
+          group: emotion.category,
+          items: [],
+        };
+      }
+      acc[emotion.category].items.push({
+        value: emotion._id,
+        label: emotion.name,
+      });
+      return acc;
     }, {})
-);
+  );
   return (
     <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
       <Center>
@@ -197,18 +203,9 @@ const FormNotes = ({ note }) => {
             {...form.getInputProps("lifeAspect")}
           />
           <ListPeople form={form} />
-          {/* <MultiSelect
-            label="Tags"
-            placeholder="Select or create tags"
-            data={tags?.map(tag => ({ value: tag._id, label: tag.name })) || []}
-            {...form.getInputProps("tags")}
-            searchable
-            creatable
-            getCreateLabel={(query) => `+ Create ${query}`}
-            onCreate={handleCreateTag}
-          />  */}
+
           <MultiSelect
-          maxDropdownHeight={200}
+            maxDropdownHeight={200}
             label="Emotions"
             placeholder="Select emotions"
             data={groupedEmotions}
@@ -220,6 +217,13 @@ const FormNotes = ({ note }) => {
             placeholder="Select expectations"
             data={expectationsData}
             {...form.getInputProps("expectations")}
+            searchable
+          />
+          <MultiSelect
+            label="Claims"
+            placeholder="Select claims"
+            data={claimsData}
+            {...form.getInputProps("claims")}
             searchable
           />
           <TagsInput
