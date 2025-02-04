@@ -1,4 +1,4 @@
-import { Button, Modal, Text } from "@mantine/core";
+import { Button, Modal, Text , ActionIcon} from "@mantine/core";
 import React from "react";
 import { useDisclosure } from "@mantine/hooks";
 import AddPersonForm from "./addPersonForm";
@@ -17,9 +17,13 @@ const AddPerson = ({ refetch}) => {
         <AddPersonForm close={closeAddPersonModal} refetch={refetch} />
       </Modal>
 
-      <Button onClick={open} leftSection={<MdOutlinePersonAddAlt size={27} />}>
+      <ActionIcon onClick={open} variant="transparent">
+        <MdOutlinePersonAddAlt size={24} />
+      </ActionIcon>
+
+      {/* <Button onClick={open} leftSection={<MdOutlinePersonAddAlt size={27} />}>
         <Text visibleFrom="md">{"Add Person"}</Text>
-      </Button>
+      </Button> */}
     </>
   );
 };

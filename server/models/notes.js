@@ -57,6 +57,13 @@ const noteSchema = new Schema(
         required: false,
       },
     ],
+    fears: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Fear",
+        required: false,
+      },
+    ],
   },
   {
     timestamps: true,

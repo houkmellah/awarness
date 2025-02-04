@@ -7,6 +7,7 @@ import {
   Textarea,
   MultiSelect,
   TagsInput,
+  Group   
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -18,6 +19,8 @@ import { apiUrl } from "../../../utils/config";
 import AddEgo from "../../../ego/addEgo";
 import useExpectationStore from "../../../expectations/store";
 import useClaimStore from "../../../claims/store";
+import useFearStore from "../../../fears/store";
+import Debugger from "../../../debugger";
 
 const FormNotes = ({ note }) => {
   const queryClient = useQueryClient();
@@ -38,6 +41,7 @@ const FormNotes = ({ note }) => {
   ];
 
   const { expectations } = useExpectationStore();
+  const { fears } = useFearStore();
   const { claims } = useClaimStore();
   console.log("Claims ===>", claims);
   const expectationsData = expectations.map((expectation) => ({
@@ -48,6 +52,10 @@ const FormNotes = ({ note }) => {
     value: claim._id,
     label: claim.title,
   }));
+  const fearsData = fears.map((fear) => ({
+    value: fear._id,
+    label: fear.title,
+  })) 
 
   console.log("Claim Data ====>", claimsData);
   // console.log(expectations)
@@ -63,6 +71,7 @@ const FormNotes = ({ note }) => {
       emotions: note?.emotions ?? [],
       expectations: note?.expectations ?? [],
       claims: note?.claims ?? [],
+      fears: note?.fears ?? [],
     },
   });
 
@@ -191,70 +200,86 @@ const FormNotes = ({ note }) => {
   );
   return (
     <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
+      <Stack spacing="md" w="100%">
+  <Group position="apart" grow align="flex-start">
+    {/* Colonne gauche */}
+    <Stack w="60%" spacing="xs" justify="flex-start">
+      <Textarea 
+        label="Note" 
+        {...form.getInputProps("note")} 
+        autosize 
+        minRows={20}
+      />
+    </Stack>
+
+    {/* Colonne droite */}
+    <Stack w="40%" spacing="xs">
+      <DateInput label="Date" {...form.getInputProps("date")} />
+      <MultiSelect
+        label="Life Aspects"
+        placeholder="Select life aspects"
+        data={lifeAspects}
+        {...form.getInputProps("lifeAspect")}
+      />
+      <ListPeople form={form} />
+      <MultiSelect
+        maxDropdownHeight={200}
+        label="Emotions"
+        placeholder="Select emotions"
+        data={groupedEmotions}
+        {...form.getInputProps("emotions")}
+        searchable
+      />
+      <MultiSelect
+        label="Expectations"
+        placeholder="Select expectations"
+        data={expectationsData}
+        {...form.getInputProps("expectations")}
+        searchable
+      />
+      <MultiSelect
+        label="Claims"
+        placeholder="Select claims"
+        data={claimsData}
+        {...form.getInputProps("claims")}
+        searchable
+      />
+      <MultiSelect
+        label="Fears"
+        placeholder="Select fears"
+        data={fearsData}
+        {...form.getInputProps("fears")}
+        searchable
+      />
+      <TagsInput
+        label="Tags"
+        placeholder="Select or create tags"
+        data={tags?.map((tag) => ({ value: tag._id, label: tag.name })) || []}
+        {...form.getInputProps("tags")}
+        searchable
+        creatable
+        getCreateLabel={(query) => `+ Create ${query}`}
+        onCreate={handleCreateTag}
+      />
       <Center>
-        <Stack w="100%">
-          <Textarea label="Note" {...form.getInputProps("note")} autosize />
-          <DateInput label="Date" {...form.getInputProps("date")} />
-
-          <MultiSelect
-            label="Life Aspects"
-            placeholder="Select life aspects"
-            data={lifeAspects}
-            {...form.getInputProps("lifeAspect")}
-          />
-          <ListPeople form={form} />
-
-          <MultiSelect
-            maxDropdownHeight={200}
-            label="Emotions"
-            placeholder="Select emotions"
-            data={groupedEmotions}
-            {...form.getInputProps("emotions")}
-            searchable
-          />
-          <MultiSelect
-            label="Expectations"
-            placeholder="Select expectations"
-            data={expectationsData}
-            {...form.getInputProps("expectations")}
-            searchable
-          />
-          <MultiSelect
-            label="Claims"
-            placeholder="Select claims"
-            data={claimsData}
-            {...form.getInputProps("claims")}
-            searchable
-          />
-          <TagsInput
-            label="Tags"
-            placeholder="Select or create tags"
-            data={
-              tags?.map((tag) => ({ value: tag._id, label: tag.name })) || []
-            }
-            {...form.getInputProps("tags")}
-            searchable
-            creatable
-            getCreateLabel={(query) => `+ Create ${query}`}
-            onCreate={handleCreateTag}
-          />
-          <Center>
-            <EmojiRating
-              value={form.values.rating}
-              onChange={(value) => form.setFieldValue("rating", value)}
-            />
-          </Center>
-          <AddEgo />
-          <Button
-            type="submit"
-            loading={
-              createNoteMutation.isLoading || updateNoteMutation.isLoading
-            }
-          >
-            {note ? "Update" : "Submit"}
-          </Button>
-        </Stack>
+        <EmojiRating
+          value={form.values.rating}
+          onChange={(value) => form.setFieldValue("rating", value)}
+        />
       </Center>
+    </Stack>
+  </Group>
+
+  {/* Bouton de soumission */}
+  <Center>
+    <Button
+      type="submit"
+      loading={createNoteMutation.isLoading || updateNoteMutation.isLoading}
+    >
+      {note ? "Update" : "Submit"}
+    </Button>
+  </Center>
+</Stack>
     </form>
   );
 };
