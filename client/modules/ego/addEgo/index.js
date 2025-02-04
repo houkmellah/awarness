@@ -1,4 +1,4 @@
-import {Button, Modal , Textarea} from "@mantine/core"
+import {Button, Modal , Textarea , ActionIcon} from "@mantine/core"
 import { GoCommentDiscussion } from "react-icons/go";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
@@ -29,9 +29,10 @@ const AddEgo = ({note}) => {
         <Modal opened={opened} onClose={closeEgoModal} title="Add Ego" size={"xl"}>
         <FormEgoMessage note={note} egoMessages={egoMessages} refetch={refetch}/>
         </Modal>
-        <Button onClick={openEgoModal} leftSection={<GoCommentDiscussion size={24} />}>
-            Add Ego 
-        </Button>
+        <ActionIcon onClick={openEgoModal} variant="transparent">
+            <GoCommentDiscussion size={24} />
+        </ActionIcon>
+        
     </>
     )
 }

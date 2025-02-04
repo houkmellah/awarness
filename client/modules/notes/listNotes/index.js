@@ -24,6 +24,8 @@ import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "../../auth/store";
 import usePeopleStore from "../../people/addPerson/store/usePeopleStore";
 import useEmotionsStore from "../../emotions/store";
+import useClaimsStore from "../../claims/store";
+import useFearsStore from "../../fears/store";
 
 import UpdateNote from "../updateNote";
 import getInitials from "../../utils/getInitials";
@@ -63,6 +65,8 @@ const LifeAspectBadge = ({ aspect }) => {
 const ListNotes = () => {
   const [notification, setNotification] = useState(null);
   const { expectations } = useExpectationStore();
+  const { claims } = useClaimsStore();
+  const { fears } = useFearsStore();
   const { token, userId } = useAuthStore((state) => ({
     token: state.token,
     userId: state.user?.id,
@@ -267,6 +271,24 @@ const ListNotes = () => {
                               }
                             </Badge>
                           ))}
+                          {note?.claims?.map((claim) => (
+                            <Badge
+                              key={`claim-${claim}`}
+                              variant="outline"
+                              color="red"
+                            >
+                              {claims.find((c) => c._id === claim)?.title}
+                            </Badge>
+                          ))}
+                          {note?.fears?.map((fear) => (
+                            <Badge
+                              key={`fear-${fear}`}
+                              variant="outline"
+                              color="orange"
+                            >
+                              {fears.find((f) => f._id === fear)?.title}
+                            </Badge>
+                          ))}
                         </Group>
                       </Stack>
                     </Table.Td>
@@ -320,6 +342,7 @@ const ListNotes = () => {
                     </Table.Td>
                     <Table.Td>
                       <Group gap="xs" justify="end">
+                        <AddEgo note={note} />
                         <UpdateNote note={note} />
                         <DeleteNote
                           id={note._id}
@@ -327,7 +350,6 @@ const ListNotes = () => {
                           setNotification={setNotification}
                           refetch={refetch}
                         />
-                        <AddEgo note={note} />
                       </Group>
                     </Table.Td>
                     {/* <Debugger data={note?.expectations} /> */}

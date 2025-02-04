@@ -17,6 +17,12 @@ import { useForm } from "@mantine/form";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { register, login, forgotPassword } from "./api";
 import useAuthStore from "./store";
+import { useQueryClient } from "@tanstack/react-query";
+import useClaimStore from "../claims/store";
+import useFearStore from "../fears/store";
+import useEmotionsStore from "../emotions/store";
+import useExpectationStore from "../expectations/store";
+import axios from "axios";
 
 const Auth = () => {
   const [mode, setMode] = useState("login"); // 'login', 'register', or 'forgotPassword'
@@ -24,6 +30,11 @@ const Auth = () => {
   const router = useRouter();
   const setToken = useAuthStore((state) => state.setToken);
   const setUser = useAuthStore((state) => state.setUser);
+  const queryClient = useQueryClient();
+  const { setClaims } = useClaimStore();
+  const { setfears } = useFearStore();
+  const { setEmotions } = useEmotionsStore();
+  const { setExpectations } = useExpectationStore();
 
   const form = useForm({
     initialValues: {
@@ -49,6 +60,33 @@ const Auth = () => {
     },
   });
 
+  const fetchInitialData = async (token) => {
+    try {
+      const [claimsRes, fearsRes, emotionsRes , expectationsRes] = await Promise.all([
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/claims`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/fears`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/emotions`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/expectations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      setClaims(claimsRes.data);
+      setfears(fearsRes.data);
+      setEmotions(emotionsRes.data);
+      setExpectations(expectationsRes.data);
+      console.log(expectationsRes.data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des données initiales:", error);
+    }
+  };
+
   const handleSubmit = async (values) => {
     setNotification(null);
     try {
@@ -57,7 +95,11 @@ const Auth = () => {
         const { token, userId, name, email } = response.data;
         setToken(token);
         setUser({ id: userId, name, email });
-        setNotification({ type: "success", message: "Login successful" });
+        
+        // Charger les données initiales après la connexion
+        await fetchInitialData(token);
+        
+        setNotification({ type: "success", message: "Connexion réussie" });
         setTimeout(() => router.push("/"), 1500);
       } else if (mode === "register") {
         await register(values.name, values.email, values.password);
@@ -78,7 +120,7 @@ const Auth = () => {
     } catch (error) {
       setNotification({
         type: "error",
-        message: error.response?.data?.message || "An error occurred",
+        message: error.response?.data?.message || "Une erreur est survenue",
       });
     }
   };
