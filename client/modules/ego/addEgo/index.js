@@ -26,7 +26,7 @@ const AddEgo = ({note}) => {
     const egoMessages = data?.data;
     return (
     <>
-        <Modal opened={opened} onClose={closeEgoModal} title="Add Ego" size={"xl"}>
+        <Modal opened={opened} onClose={closeEgoModal} title="Add Ego" size={"100%"}>
         <FormEgoMessage note={note} egoMessages={egoMessages} refetch={refetch}/>
         </Modal>
         <ActionIcon onClick={openEgoModal} variant="transparent">
