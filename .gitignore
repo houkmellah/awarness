@@ -1,13 +1,50 @@
+# Variables d'environnement
 **/.env
+**/.env.*
+!**/.env.example
+!**/.env.template
 **/.env.local
 
+# Dependencies
 **/node_modules/
 
-# Exclure le dossier next
+# Build outputs
 **/next/
-
 **/.next/
+**/build/
+**/dist/
 
+# Uploads
 **/uploads/*
 !**/uploads/.gitkeep
-**/.next/
+
+# Credentials et fichiers sensibles
+**/creditsGoogleToSpeech.json
+**/credentials.json
+**/service-account*.json
+**/*credentials*.json
+**/*secret*.json
+**/*key*.json
+**/config/secrets.js
+**/config/credentials.js
+
+# Certificats et clés
+**/*.pem
+**/*.p12
+**/*.pfx
+**/*.key
+**/*.crt
+**/*.cer
+
+# Logs
+**/logs/
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Fichiers temporaires
+**/*.bak
+**/*.backup
+**/*.tmp
+**/*.temp
