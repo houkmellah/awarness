@@ -21,6 +21,8 @@ import useExpectationStore from "../../../expectations/store";
 import useClaimStore from "../../../claims/store";
 import useFearStore from "../../../fears/store";
 import Debugger from "../../../debugger";
+import AudioRecorder from "../../../transcription";
+import RewriteNote from "../../rewriteNote"
 
 const FormNotes = ({ note }) => {
   const queryClient = useQueryClient();
@@ -57,7 +59,6 @@ const FormNotes = ({ note }) => {
     label: fear.title,
   })) 
 
-  console.log("Claim Data ====>", claimsData);
   // console.log(expectations)
 
   const form = useForm({
@@ -198,6 +199,16 @@ const FormNotes = ({ note }) => {
       return acc;
     }, {})
   );
+
+  // Fonction pour mettre à jour le champ de note avec la transcription
+  const handleTranscriptionUpdate = (transcription) => {
+    form.setFieldValue("note", transcription);
+  };
+
+  const handleRewrite = (newText) => {
+    form.setFieldValue('note', newText);
+  };
+
   return (
     <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
       <Stack spacing="md" w="100%">
@@ -210,6 +221,10 @@ const FormNotes = ({ note }) => {
         autosize 
         minRows={20}
       />
+      <Group justify="flex-end">
+        <AudioRecorder onTranscriptionUpdate={handleTranscriptionUpdate} />
+      </Group>
+      <RewriteNote note={note} onRewrite={handleRewrite} />
     </Stack>
 
     {/* Colonne droite */}

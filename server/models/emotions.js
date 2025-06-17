@@ -11,11 +11,11 @@ const emotionSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true,
+    required: false,
   },
   message: {
     type: String,
-    required: true,
+    required: false,
   },
   guidance: {
     type: [String],

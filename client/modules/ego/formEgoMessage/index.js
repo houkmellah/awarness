@@ -2,8 +2,9 @@ import useAuthStore from "../../auth/store";
 import { useForm } from "@mantine/form";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { Textarea, Button, Group, Stack } from "@mantine/core";
+import { Textarea, Button, Group, Stack, ActionIcon } from "@mantine/core";
 import Debugger from "../../debugger";
+import WriteMessageWithAI from "../../ia/writeMessageWithIA";
 
 
 const FormEgoMessage = ({note, egoMessages , refetch}) => {
@@ -52,21 +53,40 @@ const FormEgoMessage = ({note, egoMessages , refetch}) => {
     const egoMessage = egoMessages ? egoMessages[0]?.message : "";
     return (
         <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
+            
             <Stack>
-            <Group grow align="flex-start">
 
-           
+            <Group grow align="flex-start">
+           <Stack>
+                <ActionIcon variant="light" radius={"xl"} >
+                    <WriteMessageWithAI 
+                        originalMessage={note.note} 
+                        onMessageGenerated={(text) => form.setFieldValue("message", text)}
+                        action={"egoProtector"}
+                    />
+                </ActionIcon>
             <Textarea 
             placeholder="Add Ego Message" 
             {...form.getInputProps("message")} 
             defaultValue={egoMessage}
             autosize/>
+            </Stack>
+            <Stack>
+                <ActionIcon variant="light" radius={"xl"} >
+                    <WriteMessageWithAI 
+                        originalMessage={note.note} 
+                        messageEgo={form.values.message}
+                        onMessageGenerated={(text) => form.setFieldValue("response", text)}
+                        action={"higherSelf"}
+                    />
+                </ActionIcon>
             <Textarea 
             placeholder="Add Heartfelt Response" 
             {...form.getInputProps("response")} 
             defaultValue={egoMessages ? egoMessages[0]?.response : ""}
             autosize
             />
+            </Stack>
             </Group>
             {/* <Debugger data={egoMessages?.[0]} /> */}
             <Group justify="flex-end">

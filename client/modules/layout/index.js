@@ -19,6 +19,7 @@ import AddPerson from "../people/addPerson";
 import dynamic from "next/dynamic";
 import useAuthStore from "../auth/store";
 import AddExpectation from "../expectations/addExpectation";
+import AddAndUpdateEmotion from "../emotions/addAndUpdateEmotion";
 
 const UserMenu = dynamic(() => import("../auth/userMenu"), { ssr: false });
 
@@ -77,8 +78,9 @@ export function Layout({ children }) {
               <>
                 {router.pathname === "/people" && <AddPerson />}
                 {router.pathname === "/notes" && <AddNote />}
-                {user?.name && <UserMenu mobileOpened={mobileOpened} />}
                 {router.pathname === "/expectations" && <AddExpectation />}
+                {router.pathname === "/emotions" && <AddAndUpdateEmotion />}
+                {user?.name && <UserMenu mobileOpened={mobileOpened} />}
               </>
             )}
           </Group>

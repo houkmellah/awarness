@@ -1,85 +1,80 @@
 const cors = require("cors");
 const fs = require("fs");
 const express = require("express");
-const mogoose = require("mongoose");
+const mongoose = require("mongoose");
 const morgan = require("morgan");
-const { default: mongoose } = require("mongoose");
 const authMiddleware = require("./middlewares/auth");
-const path = require("path"); // Ajoutez cette ligne
+const path = require("path");
 require("dotenv").config();
 
-
-// Create express app
+// Création de l'application Express
 const app = express();
 
-// Middleware amélioré pour le logging
+// Middleware de logging personnalisé (optionnel)
 app.use((req, res, next) => {
+  // Vous pouvez activer ces logs pour débugger
   // console.log('Path:', req.path);
   // console.log('Origin:', req.get('origin') || 'No origin');
-  // console.log("ORIGIN_URL", process.env.ORIGIN_URL);
   next();
 });
-//DB
+
+// Connexion à la base de données MongoDB
 mongoose
   .connect(process.env.DATABASE, {
-    // useNewUrlParser: true,
-    // useUnifiedTopology: true,
+    // Vous pouvez ajouter d'autres options ici si besoin
   })
   .then(() => console.log("DB connected"))
   .catch((err) => console.log("DB connection error", err));
 
-// Apply middlewares
+// Configuration du CORS
 app.use(
   cors({
-    origin: [
-      process.env.ORIGIN_URL,
-    ],
+    origin: [process.env.ORIGIN_URL],
   })
 );
 
-// Ajouter ce nouveau middleware pour logger l'origine
-// ... existing code ...
-
-
-// ... existing code ...
-
+// Middleware pour parser le JSON
 app.use(express.json());
+
+// Middleware de logging HTTP
 app.use(morgan("dev"));
+
+// Un middleware générique (optionnel)
 app.use((req, res, next) => {
   next();
 });
 
+// Chargement dynamique des routes depuis le dossier "routes"
 const routesPath = path.join(__dirname, "routes");
 if (fs.existsSync(routesPath)) {
   fs.readdirSync(routesPath).forEach((r) => {
     try {
-      console.log("r", r);
+      console.log("Chargement de la route :", r);
       const route = require(path.join(routesPath, r));
 
       // Créer un nouveau router pour ce fichier de route
       const fileRouter = express.Router();
 
-      // Appliquer les routes du fichier à ce nouveau router
+      // Parcourir la stack de middleware du router exporté
       route.router.stack.forEach((layer) => {
         if (layer.route) {
-          const path = layer.route.path;
+          const routePath = layer.route.path;
+          // Récupérer la méthode (ex: "post", "get", etc.)
           const method = Object.keys(layer.route.methods)[0];
 
+          // Récupérer TOUS les middlewares de cette route
+          const handlers = layer.route.stack.map((l) => l.handle);
+
+          // Appliquer le middleware d'authentification si la route est protégée
           if (route.protected === true) {
-            // Si la route est protégée, appliquer le middleware d'authentification
-            fileRouter[method](
-              path,
-              authMiddleware,
-              layer.route.stack[0].handle
-            );
+            fileRouter[method](routePath, authMiddleware, ...handlers);
           } else {
-            // Sinon, appliquer la route sans le middleware d'authentification
-            fileRouter[method](path, layer.route.stack[0].handle);
+            fileRouter[method](routePath, ...handlers);
           }
         }
       });
 
-      // Appliquer le nouveau router à l'application
+      // Monter le router avec le préfixe "/api"
       app.use("/api", fileRouter);
     } catch (error) {
       console.error(`Erreur lors du chargement de la route ${r}:`, error);
@@ -89,12 +84,12 @@ if (fs.existsSync(routesPath)) {
   console.warn("Le répertoire 'routes' n'existe pas.");
 }
 
-// Remplacez la partie d'écoute du serveur par ceci :
+// Démarrage de l'application ou export pour Vercel
 if (process.env.VERCEL) {
-  // Exportez l'application pour Vercel
+  // Pour un déploiement sur Vercel
   module.exports = app;
 } else {
-  // Démarrez le serveur normalement pour le développement local
+  // Pour le développement local
   const port = process.env.PORT || 8000;
   app.listen(port, () => {
     console.log(`Server is running on port : ${port}`);

@@ -19,7 +19,7 @@ const register = async (req, res) => {
     });
     await user.save();
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "30h",
+      expiresIn: "24h",
     });
     res.status(201).json({ token, userId: user._id });
   } catch (error) {
@@ -39,7 +39,7 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "24h",
     });
     res.json({ token, userId: user._id, email: user.email, name: user.name });
   } catch (error) {

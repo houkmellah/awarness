@@ -7,7 +7,7 @@ const expectationSchema = new mongoose.Schema({
     },
     reason: {
         type: String,
-        required: true
+        required: false
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,

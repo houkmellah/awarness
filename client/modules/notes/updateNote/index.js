@@ -22,7 +22,7 @@ const UpdateNote = ({ note }) => {
         </ActionIcon>
       </Tooltip>
       <Modal
-        size="lg"
+        size={"100%"}
         opened={opened}
         onClose={() => {
           close();

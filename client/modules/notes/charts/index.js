@@ -161,19 +161,23 @@ const LifeInsightsDashboard = () => {
       note.people.forEach((person) => {
         const personName = `${person.firstName} ${person.secondName}`.trim();
         if (!acc[personName]) {
-          acc[personName] = { person: personName };
+          acc[personName] = { person: personName, total: 0 };
           sortedRatings.forEach((rating) => {
             acc[personName][RATING_LABELS[rating]] = 0;
           });
         }
         const ratingKey = RATING_LABELS[note.rating];
         acc[personName][ratingKey]++;
+        acc[personName].total++;
       });
     }
     return acc;
   }, {});
 
-  const peopleChartData = Object.values(peopleData);
+  const peopleChartData = Object.values(peopleData)
+    .sort((a, b) => b.total - a.total)  // Trier par total décroissant
+    .slice(0, 15)  // Ne garder que les 15 premiers
+    .map(({ total, ...rest }) => rest);  // Retirer le total avant l'affichage
 
   const emotionsData = notes.reduce((acc, note) => {
     if (note.emotions && Array.isArray(note.emotions)) {
