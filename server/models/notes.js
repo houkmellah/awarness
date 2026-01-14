@@ -64,6 +64,13 @@ const noteSchema = new Schema(
         required: false,
       },
     ],
+    beliefs: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Belief",
+        required: false,
+      },
+    ],
   },
   {
     timestamps: true,

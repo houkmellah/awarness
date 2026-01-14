@@ -2,7 +2,7 @@ const Note = require("../models/notes.js");
 
 // Create a new note
 const createNote = async (req, res) => {
-  const { note, date, rating, lifeAspect, people, tags, emotions , expectations , claims , fears  } = req.body;
+  const { note, date, rating, lifeAspect, people, tags, emotions , expectations , claims , fears, beliefs  } = req.body;
   const newNote = new Note({
     note,
     date,
@@ -14,7 +14,8 @@ const createNote = async (req, res) => {
       emotions,
     expectations,
 claims,
-fears
+fears,
+beliefs
   });
 
   try {
@@ -31,7 +32,8 @@ fears
 const getNotes = async (req, res) => {
   try {
     const notes = await Note.find({ user: req.userId })
-      .populate('people', 'firstName secondName nickName');
+      .populate('people', 'firstName secondName nickName')
+      .populate('beliefs', 'belief belielLevel');
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in getNotes:", error);
@@ -74,11 +76,11 @@ const deleteNote = async (req, res) => {
 
 // Update a note
 const updateNote = async (req, res) => {
-  const { note, date, rating, lifeAspect, people, tags, emotions , expectations , claims , fears} = req.body;
+  const { note, date, rating, lifeAspect, people, tags, emotions , expectations , claims , fears, beliefs} = req.body;
   try {
     const updatedNote = await Note.findOneAndUpdate(
       { _id: req.params.id, user: req.userId},
-      { note, date, rating, lifeAspect, people, tags, emotions, expectations , claims , fears},
+      { note, date, rating, lifeAspect, people, tags, emotions, expectations , claims , fears, beliefs},
       { new: true }
     );
     if (!updatedNote) {
