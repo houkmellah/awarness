@@ -12,4 +12,4 @@ const TranscriptionPage = () => {
   );
 };
 
-export default TranscriptionPage;	
+export default withAuth(TranscriptionPage);	
