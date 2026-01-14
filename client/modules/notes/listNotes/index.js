@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Table,
   Group,
@@ -26,7 +26,7 @@ import usePeopleStore from "../../people/addPerson/store/usePeopleStore";
 import useEmotionsStore from "../../emotions/store";
 import useClaimsStore from "../../claims/store";
 import useFearsStore from "../../fears/store";
-
+import useBeliefStore from "../../belief/store";
 import UpdateNote from "../updateNote";
 import getInitials from "../../utils/getInitials";
 import EmptyList from "../../ui/emptyList";
@@ -67,6 +67,7 @@ const ListNotes = () => {
   const { expectations } = useExpectationStore();
   const { claims } = useClaimsStore();
   const { fears } = useFearsStore();
+  const { beliefs } = useBeliefStore();
   const { token, userId } = useAuthStore((state) => ({
     token: state.token,
     userId: state.user?.id,
@@ -91,6 +92,29 @@ const ListNotes = () => {
   });
 
   people = peopleFromStore && peopleFromQuery;
+
+  // Initialiser le store des beliefs si nécessaire
+  const { setBeliefs } = useBeliefStore();
+  
+  useEffect(() => {
+    const initializeBeliefs = async () => {
+      try {
+        const { data } = await axios.get(`${apiUrl}/beliefs`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setBeliefs(data);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des beliefs:", error);
+      }
+    };
+
+    if (token && userId && beliefs.length === 0) {
+      initializeBeliefs();
+    }
+  }, [token, userId, setBeliefs, beliefs.length]);
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const notesPerPage = 10;
@@ -170,6 +194,13 @@ const ListNotes = () => {
   const getEmotionName = (value) => {
     const emotion = emotions.find((e) => e._id === value);
     return emotion ? emotion.name : "Unknown";
+  };
+  const getBeliefName = (value) => {
+    console.log("value belief ===>", value);
+    console.log("beliefs ===>", beliefs);   
+    const belief = beliefs.find((b) => b._id === value._id);
+    console.log("belief found ====>", belief);
+    return belief ? belief.belief : "Unknown";
   };
   const renderSortIcon = (key) => {
     if (sortConfig.key === key) {
@@ -287,6 +318,15 @@ const ListNotes = () => {
                               color="orange"
                             >
                               {fears.find((f) => f._id === fear)?.title}
+                            </Badge>
+                          ))}
+                          {note?.beliefs?.map((belief) => (
+                            <Badge
+                              key={`belief-${belief}`}
+                              variant="outline"
+                              color="purple"
+                            >
+                              {getBeliefName(belief)}
                             </Badge>
                           ))}
                         </Group>

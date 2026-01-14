@@ -12,7 +12,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import AddNote from "../notes/addNote";
 import { BsPeople } from "react-icons/bs";
-import { MdInterests, MdOutlineMood, MdOutlineMoodBad, MdOutlineNotes } from "react-icons/md";
+import { MdInterests, MdOutlineMood, MdOutlineMoodBad, MdOutlineNotes, MdPsychology } from "react-icons/md";
 import { MdDashboard } from "react-icons/md";
 import { useRouter } from "next/router";
 import AddPerson from "../people/addPerson";
@@ -20,7 +20,7 @@ import dynamic from "next/dynamic";
 import useAuthStore from "../auth/store";
 import AddExpectation from "../expectations/addExpectation";
 import AddAndUpdateEmotion from "../emotions/addAndUpdateEmotion";
-
+import AddBelief from "../belief/addBelief";
 const UserMenu = dynamic(() => import("../auth/userMenu"), { ssr: false });
 
 const pages = [
@@ -29,6 +29,7 @@ const pages = [
   { name: "Notes", path: "/notes", icon: MdOutlineNotes },
   { name: "Emotions", path: "/emotions", icon: MdOutlineMood },
   { name: "Expectations", path: "/expectations", icon: MdInterests },
+  { name: "Beliefs", path: "/beliefs", icon: MdPsychology },
   { name: "Claims", path: "/claims", icon: MdOutlineMood },
   { name: "Fears", path: "/fears", icon: MdOutlineMoodBad },
 ];
@@ -76,6 +77,7 @@ export function Layout({ children }) {
           <Group>
             {isClient && (
               <>
+                {router.pathname === "/beliefs" && <AddBelief />}
                 {router.pathname === "/people" && <AddPerson />}
                 {router.pathname === "/notes" && <AddNote />}
                 {router.pathname === "/expectations" && <AddExpectation />}

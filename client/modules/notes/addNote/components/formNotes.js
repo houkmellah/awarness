@@ -1,5 +1,6 @@
 import React from "react";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
 import {
   Center,
   Stack,
@@ -7,7 +8,11 @@ import {
   Textarea,
   MultiSelect,
   TagsInput,
-  Group   
+  Group,
+  ActionIcon,
+  Modal,
+  TextInput,
+  Select
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -20,14 +25,38 @@ import AddEgo from "../../../ego/addEgo";
 import useExpectationStore from "../../../expectations/store";
 import useClaimStore from "../../../claims/store";
 import useFearStore from "../../../fears/store";
+import useBeliefStore from "../../../belief/store";
 import Debugger from "../../../debugger";
 import AudioRecorder from "../../../transcription";
-import RewriteNote from "../../rewriteNote"
+import RewriteNote from "../../rewriteNote";
+import { MdAdd } from "react-icons/md";
+
+const BELIEF_LEVEL_OPTIONS = [
+  { value: '0', label: "Je sais que l'idée est fausse et je n'y prete pas attention" },
+  { value: '1', label: "Je sais que l'idée est fausse et je ne m'y empecher d'y preter attention" },
+  { value: '2', label: "Parfois surtout quand ca ne va pas bien j'y prete attention" },
+  { value: '3', label: "Souvent je pense qu'elle est vraie" },
+  { value: '4', label: "J'y crois tellement que je pense qu'elle fait partie de moi et de ma personnalité" },
+];
 
 const FormNotes = ({ note }) => {
   const queryClient = useQueryClient();
   let dateValue = note?.date ? new Date(note.date) : new Date();
-  const { token } = useAuthStore();
+  const { token, userId } = useAuthStore();
+  
+  // États pour le modal de création de belief
+  const [opened, { open, close }] = useDisclosure(false);
+  
+  // Formulaire pour créer un nouveau belief
+  const beliefForm = useForm({
+    initialValues: {
+      belief: '',
+      belielLevel: '0',
+    },
+    validate: {
+      belief: (value) => (value.length < 3 ? 'Le belief doit contenir au moins 3 caractères' : null),
+    },
+  });
 
   const lifeAspects = [
     "Spiritual",
@@ -45,6 +74,7 @@ const FormNotes = ({ note }) => {
   const { expectations } = useExpectationStore();
   const { fears } = useFearStore();
   const { claims } = useClaimStore();
+  const { beliefs, setBeliefs } = useBeliefStore();
   console.log("Claims ===>", claims);
   const expectationsData = expectations.map((expectation) => ({
     value: expectation._id,
@@ -57,7 +87,7 @@ const FormNotes = ({ note }) => {
   const fearsData = fears.map((fear) => ({
     value: fear._id,
     label: fear.title,
-  })) 
+  }));
 
   // console.log(expectations)
 
@@ -73,6 +103,7 @@ const FormNotes = ({ note }) => {
       expectations: note?.expectations ?? [],
       claims: note?.claims ?? [],
       fears: note?.fears ?? [],
+      beliefs: note?.beliefs?.map(belief => typeof belief === 'object' ? belief._id : belief) ?? [],
     },
   });
 
@@ -165,6 +196,45 @@ const FormNotes = ({ note }) => {
     });
     return null;
   };
+
+  // Mutation pour créer un nouveau belief
+  const createBeliefMutation = useMutation({
+    mutationFn: (beliefData) =>
+      axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/beliefs`,
+        beliefData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      ),
+    onSuccess: (data) => {
+      const newBelief = data.data;
+      // Ajouter le nouveau belief au store
+      setBeliefs([...beliefs, newBelief]);
+      
+      // Ajouter le nouveau belief à la sélection actuelle
+      form.setFieldValue("beliefs", [...form.values.beliefs, newBelief._id]);
+      
+      // Fermer le modal et réinitialiser le formulaire
+      close();
+      beliefForm.reset();
+      
+      // Invalider la requête pour rafraîchir les données
+      queryClient.invalidateQueries(["ListBeliefs"]);
+    },
+  });
+
+  // Fonction pour soumettre le nouveau belief
+  const handleSubmitBelief = (values) => {
+    // Convertir la valeur string du select en nombre
+    const beliefData = {
+      ...values,
+      belielLevel: parseInt(values.belielLevel, 10)
+    };
+    createBeliefMutation.mutate(beliefData);
+  };
   const fetchEmotions = async (token) => {
     try {
       const { data } = await axios.get(`${apiUrl}/emotions`, {
@@ -183,6 +253,19 @@ const FormNotes = ({ note }) => {
     queryFn: () => fetchEmotions(token),
     enabled: !!token,
   });
+
+  // Utiliser les beliefs du store au lieu d'une requête directe
+  const beliefsData = (beliefs || [])
+    .filter((belief) => belief && belief._id && belief.belief) // Filtrer les beliefs valides
+    .map((belief) => ({
+      value: String(belief._id), // S'assurer que c'est une chaîne
+      label: String(belief.belief), // S'assurer que c'est une chaîne
+    }));
+
+  // Debug: vérifier les données des beliefs
+  console.log("beliefs from store:", beliefs);
+  console.log("beliefsData:", beliefsData);
+  console.log("form.values.beliefs:", form.values.beliefs);
 
   const groupedEmotions = Object.values(
     emotions.reduce((acc, emotion) => {
@@ -266,6 +349,25 @@ const FormNotes = ({ note }) => {
         {...form.getInputProps("fears")}
         searchable
       />
+      <Group align="flex-end">
+        <MultiSelect
+          label="Beliefs"
+          placeholder="Select beliefs"
+          data={beliefsData || []}
+          {...form.getInputProps("beliefs")}
+          searchable
+          style={{ flex: 1 }}
+        />
+        <ActionIcon
+          onClick={open}
+          variant="filled"
+          color="blue"
+          size="lg"
+          title="Ajouter un nouveau belief"
+        >
+          <MdAdd size={20} />
+        </ActionIcon>
+      </Group>
       <TagsInput
         label="Tags"
         placeholder="Select or create tags"
@@ -295,6 +397,39 @@ const FormNotes = ({ note }) => {
     </Button>
   </Center>
 </Stack>
+
+      {/* Modal pour créer un nouveau belief */}
+      <Modal opened={opened} onClose={close} title="Ajouter un nouveau belief" size="md">
+        <form onSubmit={beliefForm.onSubmit(handleSubmitBelief)}>
+          <Stack>
+            <TextInput
+              label="Belief"
+              placeholder="Entrez votre belief"
+              {...beliefForm.getInputProps("belief")}
+              required
+            />
+            <Select
+              label="Niveau de conviction"
+              placeholder="Sélectionnez votre niveau de conviction"
+              data={BELIEF_LEVEL_OPTIONS}
+              searchable
+              required
+              {...beliefForm.getInputProps("belielLevel")}
+            />
+            <Group justify="flex-end">
+              <Button variant="outline" onClick={close}>
+                Annuler
+              </Button>
+              <Button 
+                type="submit" 
+                loading={createBeliefMutation.isPending}
+              >
+                Ajouter
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
     </form>
   );
 };
