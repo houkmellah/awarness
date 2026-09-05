@@ -72,7 +72,7 @@ const Auth = () => {
         axios.get(`${process.env.NEXT_PUBLIC_API_URL}/emotions`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/expectations`, {
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/expectations/sorted-by-usage`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);

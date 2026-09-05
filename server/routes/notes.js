@@ -6,7 +6,8 @@ const {
   getNoteById,
   updateNote,
   deleteNote,
-  getNotesByLifeAspect
+  getNotesByLifeAspect,
+  getTagSuggestions,
 } = require("../controllers/notes");
 const authMiddleware = require("../middlewares/auth");
 
@@ -16,6 +17,7 @@ router.use(authMiddleware);
 // Routes protégées
 router.post("/notes", createNote);
 router.get("/notes", getNotes);
+router.get("/notes/tags/suggestions", getTagSuggestions);
 router.get("/notes/:id", getNoteById);
 router.put("/notes/:id", updateNote);
 router.delete("/notes/:id", deleteNote);

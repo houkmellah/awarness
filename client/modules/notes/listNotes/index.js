@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/router";
 import {
   Table,
   Group,
@@ -10,11 +11,21 @@ import {
   Badge,
   Loader,
   Paper,
+  Text,
+  TextInput,
+  HoverCard,
+  Box,
+  Divider,
+  Overlay,
+  ActionIcon,
+  CopyButton,
 } from "@mantine/core";
 import {
   HiMiniChevronUpDown,
   HiMiniChevronDown,
   HiMiniChevronUp,
+  HiMagnifyingGlass,
+  HiOutlineClipboardDocument,
 } from "react-icons/hi2";
 import { GetFullIcon } from "../../getFullIcon";
 import { format } from "date-fns";
@@ -36,6 +47,7 @@ import { lifeAspects } from "../../utils/data";
 import AddEgo from "../../ego/addEgo";
 import Debugger from "../../debugger";
 import useExpectationStore from "../../expectations/store";
+
 const categoryColors = {
   doute: "blue",
   refus: "orange",
@@ -62,8 +74,49 @@ const LifeAspectBadge = ({ aspect }) => {
   );
 };
 
+const escapeRegex = (str) =>
+  String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const HighlightedText = ({ text, highlight }) => {
+  if (text == null || text === "") return null;
+  if (!highlight || !String(highlight).trim()) return <span style={{ whiteSpace: "pre-wrap" }}>{text}</span>;
+
+  const escaped = escapeRegex(highlight);
+  const regex = new RegExp(`(${escaped})`, "gi");
+  const parts = String(text).split(regex);
+
+  return (
+    <div style={{ whiteSpace: "normal", wordBreak: "break-word" }}>
+      {parts.map((part, i) =>
+        i % 2 === 1 ? (
+          <mark
+            key={i}
+            style={{
+              backgroundColor: "var(--mantine-color-yellow-2)",
+              padding: "0 2px",
+              borderRadius: 2,
+              display: "inline",
+            }}
+          >
+            {part}
+          </mark>
+        ) : (
+          <React.Fragment key={i}>{part}</React.Fragment>
+        )
+      )}
+    </div>
+  );
+};
+
 const ListNotes = () => {
+  const router = useRouter();
+  const { personId: urlPersonId, personName: urlPersonName } = router.query;
   const [notification, setNotification] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState(null);
+  const [selectedExpectation, setSelectedExpectation] = useState(null);
+  const [selectedPerson, setSelectedPerson] = useState(null);
   const { expectations } = useExpectationStore();
   const { claims } = useClaimsStore();
   const { fears } = useFearsStore();
@@ -118,6 +171,24 @@ const ListNotes = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const notesPerPage = 10;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (urlPersonId && typeof urlPersonId === "string") {
+      setSelectedPerson({
+        id: urlPersonId,
+        name: typeof urlPersonName === "string" ? decodeURIComponent(urlPersonName) : "Personne",
+      });
+    }
+  }, [urlPersonId, urlPersonName]);
+
+  const clearPersonFilter = () => {
+    setSelectedPerson(null);
+    router.replace("/notes", undefined, { shallow: true });
+  };
 
   const fetchNotes = async () => {
     try {
@@ -178,9 +249,73 @@ const ListNotes = () => {
     return sortedData;
   }, [notes, sortConfig]);
 
+  const filteredNotes = useMemo(() => {
+    return sortedNotes.filter((note) => {
+      const matchesTag = selectedTag
+        ? (note?.tags || []).some(
+            (tag) =>
+              typeof tag === "string" &&
+              tag.toLowerCase() === selectedTag.toLowerCase()
+          )
+        : true;
+
+      const matchesExpectation = selectedExpectation
+        ? (note?.expectations || []).some((expectation) => {
+            const expectationId =
+              expectation && typeof expectation === "object"
+                ? String(expectation._id || "")
+                : String(expectation || "");
+            return expectationId === selectedExpectation.id;
+          })
+        : true;
+
+      const matchesPerson = selectedPerson
+        ? (note?.people || []).some((p) => {
+            const pid = p && typeof p === "object" ? String(p._id || "") : String(p || "");
+            return pid === selectedPerson.id;
+          })
+        : true;
+
+      const q = (searchQuery || "").trim().toLowerCase();
+      const matchesSearch = !q
+        ? true
+        : (() => {
+            const noteText = (note?.note || "").toLowerCase();
+            const tagsStr = (note?.tags || []).map((t) => (t || "").toLowerCase()).join(" ");
+            const lifeAspectStr = (note?.lifeAspect || []).join(" ").toLowerCase();
+            const emotionNames = (note?.emotions || [])
+              .map((eId) => emotions.find((e) => e._id === eId)?.name || "")
+              .join(" ")
+              .toLowerCase();
+            const expectationNames = (note?.expectations || [])
+              .map((exp) => {
+                const id = exp && typeof exp === "object" ? exp._id : exp;
+                return expectations.find((e) => e._id === id)?.name || "";
+              })
+              .join(" ")
+              .toLowerCase();
+            const peopleNames = (note?.people || [])
+              .map((p) => {
+                if (!p || typeof p !== "object") return "";
+                return [p.firstName, p.secondName, p.nickName].filter(Boolean).join(" ");
+              })
+              .join(" ")
+              .toLowerCase();
+            const searchable = `${noteText} ${tagsStr} ${lifeAspectStr} ${emotionNames} ${expectationNames} ${peopleNames}`;
+            return searchable.includes(q);
+          })();
+
+      return matchesTag && matchesExpectation && matchesPerson && matchesSearch;
+    });
+  }, [sortedNotes, selectedTag, selectedExpectation, selectedPerson, searchQuery, emotions, expectations]);
+
   const indexOfLastNote = currentPage * notesPerPage;
   const indexOfFirstNote = indexOfLastNote - notesPerPage;
-  const currentNotes = sortedNotes.slice(indexOfFirstNote, indexOfLastNote);
+  const currentNotes = filteredNotes.slice(indexOfFirstNote, indexOfLastNote);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedTag, selectedExpectation, selectedPerson, searchQuery]);
 
   const onSort = (key) => {
     setSortConfig((prevConfig) => ({
@@ -219,7 +354,17 @@ const ListNotes = () => {
     return categoryColors[categoryName];
   };
 
-  if (isLoading) {
+  const isTagSelected = (tag) =>
+    Boolean(
+      selectedTag &&
+        typeof tag === "string" &&
+        tag.toLowerCase() === selectedTag.toLowerCase()
+    );
+
+  const isExpectationSelected = (expectationId) =>
+    Boolean(selectedExpectation && selectedExpectation.id === expectationId);
+
+  if (!isMounted || isLoading) {
     return (
       <Paper
         h="90vh"
@@ -239,21 +384,80 @@ const ListNotes = () => {
   }
   if (isError) return <div>Error fetching notes</div>;
 
-  if (notes.length === 0)
-    return (
-      <EmptyList
-        title={"Your Notebook is Empty"}
-        message={
-          "It looks like you haven't created any notes yet. Why not start your journey now?"
-        }
-      />
-    );
+  const emptyMessage =
+    notes.length === 0
+      ? "Votre carnet est vide. Créez votre première note !"
+      : searchQuery.trim()
+        ? `Aucune note ne correspond à "${searchQuery}".`
+        : selectedTag || selectedExpectation || selectedPerson
+          ? "Aucune note ne correspond aux filtres sélectionnés."
+          : null;
 
   return (
     <>
       <Stack justify="space-between" h={"85vh"}>
-        {sortedNotes.length > 0 && (
-          <>
+        <TextInput
+          placeholder="Rechercher dans les notes, tags, émotions, personnes..."
+          leftSection={<HiMagnifyingGlass size={16} />}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
+          mb="sm"
+        />
+        {true && (
+        <>
+            {(selectedTag || selectedExpectation || selectedPerson) && (
+              <Group justify="space-between">
+                <Group gap="xs">
+                  {selectedTag && (
+                    <Text size="sm">
+                      Tag: <strong>{selectedTag}</strong>
+                    </Text>
+                  )}
+                  {selectedExpectation && (
+                    <Text size="sm">
+                      Attente: <strong>{selectedExpectation.name}</strong>
+                    </Text>
+                  )}
+                  {selectedPerson && (
+                    <Text size="sm">
+                      Personne: <strong>{selectedPerson.name}</strong>
+                    </Text>
+                  )}
+                </Group>
+                <Group gap="xs">
+                  {selectedTag && (
+                    <Badge
+                      variant="outline"
+                      color="red"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setSelectedTag(null)}
+                    >
+                      Effacer tag
+                    </Badge>
+                  )}
+                  {selectedExpectation && (
+                    <Badge
+                      variant="outline"
+                      color="red"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setSelectedExpectation(null)}
+                    >
+                      Effacer attente
+                    </Badge>
+                  )}
+                  {selectedPerson && (
+                    <Badge
+                      variant="outline"
+                      color="red"
+                      style={{ cursor: "pointer" }}
+                      onClick={clearPersonFilter}
+                    >
+                      Effacer personne
+                    </Badge>
+                  )}
+                </Group>
+              </Group>
+            )}
             <Table bg="white" withTableBorder>
               <Table.Thead>
                 <Table.Tr>
@@ -275,33 +479,93 @@ const ListNotes = () => {
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {currentNotes.map((note) => (
+                {currentNotes.length > 0 ? (
+                  currentNotes.map((note) => (
                   <Table.Tr key={note._id}>
                     <Table.Td>
                       <Stack>
-                        {note.note}
+                        <Group gap="xs" align="flex-start" wrap="nowrap">
+                          <Box style={{ flex: 1, minWidth: 0 }}>
+                            <HighlightedText text={note.note} highlight={searchQuery} />
+                          </Box>
+                          <CopyButton value={note?.note || ""}>
+                            {({ copied, copy }) => (
+                              <Tooltip label={copied ? "Copié !" : "Copier la description"}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="sm"
+                                  color={copied ? "teal" : "gray"}
+                                  onClick={copy}
+                                >
+                                  <HiOutlineClipboardDocument size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                            )}
+                          </CopyButton>
+                        </Group>
                         <Group>
-                          {note.tags.map((tag, index) => (
+                          {(note?.tags || []).map((tag, index) => (
                             <Badge
                               key={`tag-${index}-${tag}`}
-                              variant="outline"
-                              color="gray"
+                              variant={isTagSelected(tag) ? "filled" : "outline"}
+                              color={isTagSelected(tag) ? "blue" : "gray"}
+                              style={{ cursor: "pointer" }}
+                              onClick={() =>
+                                setSelectedTag((prev) =>
+                                  prev &&
+                                  typeof prev === "string" &&
+                                  typeof tag === "string" &&
+                                  prev.toLowerCase() === tag.toLowerCase()
+                                    ? null
+                                    : tag
+                                )
+                              }
                             >
                               {tag}
                             </Badge>
                           ))}
-                          {note?.expectations.map((expectation) => (
-                            <Badge
-                              key={`expectation-${expectation}`}
-                              variant="outline"
-                              color="blue"
-                            >
-                              {
-                                expectations.find((e) => e._id === expectation)
-                                  ?.name
-                              }
-                            </Badge>
-                          ))}
+                          {(note?.expectations || []).map((expectation, index) => {
+                            const expectationId =
+                              expectation && typeof expectation === "object"
+                                ? String(expectation._id || "")
+                                : String(expectation || "");
+                            const expectationName =
+                              expectation && typeof expectation === "object"
+                                ? expectation.name
+                                : expectations.find((e) => e._id === expectationId)
+                                    ?.name;
+
+                            if (!expectationId) return null;
+
+                            return (
+                              <Badge
+                                key={`expectation-${expectationId}-${index}`}
+                                variant={
+                                  isExpectationSelected(expectationId)
+                                    ? "filled"
+                                    : "outline"
+                                }
+                                color={
+                                  isExpectationSelected(expectationId)
+                                    ? "blue"
+                                    : "indigo"
+                                }
+                                style={{ cursor: "pointer" }}
+                                onClick={() =>
+                                  setSelectedExpectation((prev) =>
+                                    prev?.id === expectationId
+                                      ? null
+                                      : {
+                                          id: expectationId,
+                                          name: expectationName || "Attente",
+                                        }
+                                  )
+                                }
+                              >
+                                {expectationName || "Unknown"}
+                              </Badge>
+                            );
+                          })}
                           {note?.claims?.map((claim) => (
                             <Badge
                               key={`claim-${claim}`}
@@ -334,14 +598,98 @@ const ListNotes = () => {
                     </Table.Td>
                     <Table.Td>
                       <Stack>
-                        {note?.emotions.map((emotion, index) => (
-                          <Badge
-                            key={index}
-                            color={getEmotionCategoryColor(emotion)}
-                          >
-                            {getEmotionName(emotion)}
-                          </Badge>
-                        ))}
+                        {note?.emotions.map((emotionId, index) => {
+                          const emotionObj = emotions.find((e) => e._id === emotionId);
+                          if (!emotionObj) return null;
+                          const color = getEmotionCategoryColor(emotionId);
+                          return (
+                            <HoverCard
+                              key={index}
+                              width={400}
+                              size="lg"
+                              position="bottom-start"
+                              shadow="md"
+                              withArrow
+                              closeDelay={0}
+                            >
+                              <HoverCard.Target>
+                                <Badge
+                                  color={color}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  {getEmotionName(emotionId)}
+                                </Badge>
+                              </HoverCard.Target>
+                              <HoverCard.Dropdown
+                                p={0}
+                                style={{
+                                  border: "none",
+                                  borderRadius: 12,
+                                  overflow: "hidden",
+                                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                                }}
+                              >
+                                <Overlay
+                                  color="#000"
+                                  backgroundOpacity={0.25}
+                                  fixed
+                                  style={{ zIndex: -1, pointerEvents: "none" }}
+                                />
+                                <Box
+                                  p="md"
+                                  style={{
+                                    position: "relative",
+                                    zIndex: 1,
+                                    background: `linear-gradient(135deg, var(--mantine-color-${color}-0) 0%, var(--mantine-color-${color}-1) 100%)`,
+                                  }}
+                                >
+                                  <Badge
+                                    color={color}
+                                    variant="filled"
+                                    size="lg"
+                                    style={{ textTransform: "capitalize", marginBottom: 8 }}
+                                  >
+                                    {emotionObj.category}
+                                  </Badge>
+                                  <Text size="lg" fw={700} c="dark.8" lh={1.2}>
+                                    {emotionObj.name}
+                                  </Text>
+                                </Box>
+                                <Box p="md" bg="gray.0">
+                                  {emotionObj.description && (
+                                    <>
+                                      <Text size="xs" c="dimmed" tt="uppercase" fw={600} mb={6}>
+                                        Description
+                                      </Text>
+                                      <Text size="sm" mb={emotionObj.message ? "md" : 0} lh={1.6} c="dark.7">
+                                        {emotionObj.description}
+                                      </Text>
+                                      {emotionObj.message && <Divider my="sm" />}
+                                    </>
+                                  )}
+                                  {emotionObj.message && (
+                                    <>
+                                      <Text size="xs" c="dimmed" tt="uppercase" fw={600} mb={6}>
+                                        Message
+                                      </Text>
+                                      <Text
+                                        size="sm"
+                                        fs="italic"
+                                        c="dark.6"
+                                        lh={1.6}
+                                        style={{
+                                          fontFamily: "Georgia, serif",
+                                        }}
+                                      >
+                                        "{emotionObj.message}"
+                                      </Text>
+                                    </>
+                                  )}
+                                </Box>
+                              </HoverCard.Dropdown>
+                            </HoverCard>
+                          );
+                        })}
                       </Stack>
                     </Table.Td>
                     <Table.Td visibleFrom="md">
@@ -394,13 +742,22 @@ const ListNotes = () => {
                     </Table.Td>
                     {/* <Debugger data={note?.expectations} /> */}
                   </Table.Tr>
-                ))}
+                ))
+                ) : (
+                  <Table.Tr key="empty">
+                    <Table.Td colSpan={8}>
+                      <Text c="dimmed" ta="center" py="xl">
+                        {emptyMessage || "Aucune note"}
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
               </Table.Tbody>
             </Table>
             {/* <Debugger data={emotions} /> */}
             <Center mt="md">
               <Pagination
-                total={Math.ceil(sortedNotes.length / notesPerPage)}
+                total={Math.ceil(filteredNotes.length / notesPerPage)}
                 value={currentPage}
                 onChange={setCurrentPage}
               />

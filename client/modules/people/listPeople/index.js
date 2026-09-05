@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/router";
 import DeletePerson from "../deletePerson";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -13,7 +14,9 @@ import {
   Box,
   Loader,
   Paper,
+  TextInput,
 } from "@mantine/core";
+import { HiMagnifyingGlass } from "react-icons/hi2";
 import {
   HiMiniChevronUpDown,
   HiMiniChevronDown,
@@ -34,9 +37,11 @@ function getInitials(fullName) {
 }
 
 const ListPeople = () => {
-  const {token} = useAuthStore()
+  const router = useRouter();
+  const { token } = useAuthStore();
   const [notification, setNotification] = useState(null);
 
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState({
     key: "firstName",
     direction: "ascending",
@@ -71,10 +76,31 @@ const ListPeople = () => {
     return sortedData;
   }, [people, sortConfig]);
 
+  const filteredPeople = useMemo(() => {
+    const q = (searchQuery || "").trim().toLowerCase();
+    if (!q) return sortedPeople;
+    return sortedPeople.filter((person) => {
+      const firstName = (person.firstName || "").toLowerCase();
+      const secondName = (person.secondName || "").toLowerCase();
+      const nickName = (person.nickName || "").toLowerCase();
+      const fullName = `${firstName} ${secondName} ${nickName}`.trim();
+      return (
+        firstName.includes(q) ||
+        secondName.includes(q) ||
+        nickName.includes(q) ||
+        fullName.includes(q)
+      );
+    });
+  }, [sortedPeople, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   // Pagination logic
   const indexOfLastPerson = currentPage * peoplePerPage;
   const indexOfFirstPerson = indexOfLastPerson - peoplePerPage;
-  const currentPeople = sortedPeople.slice(
+  const currentPeople = filteredPeople.slice(
     indexOfFirstPerson,
     indexOfLastPerson
   );
@@ -133,7 +159,14 @@ const ListPeople = () => {
 
   return (
     <Stack>
-      {sortedPeople.length > 0 && (
+      <TextInput
+        placeholder="Rechercher par prénom, nom ou surnom..."
+        leftSection={<HiMagnifyingGlass size={16} />}
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.currentTarget.value)}
+        mb="md"
+      />
+      {filteredPeople.length > 0 ? (
         <>
           <Box style={{ overflowY: "auto", flex: 1 }}>
             <Table bg="white" withTableBorder>
@@ -153,47 +186,65 @@ const ListPeople = () => {
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {currentPeople.map((person) => (
-                  <Table.Tr key={person._id}>
-                    <Table.Td>{person.firstName}</Table.Td>
-                    <Table.Td>{person.secondName}</Table.Td>
-                    <Table.Td>{person.nickName}</Table.Td>
-                    <Table.Td>
-                      <Tooltip
-                        label={`${person.firstName} ${person.secondName}`}
-                        withArrow
-                      >
-                        <Avatar radius="xl">
-                          {getInitials(
-                            `${person.firstName} ${person.secondName}`
-                          )}
-                        </Avatar>
-                      </Tooltip>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs" justify="end">
-                        <UpdatePerson person={person} refetch={refetch} />
-                        <DeletePerson
-                          id={person._id}
-                          setNotification={setNotification}
-                          refetch={refetch}
-                        />
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
+                {currentPeople.map((person) => {
+                  const personName = [person.firstName, person.secondName]
+                    .filter(Boolean)
+                    .join(" ");
+                  return (
+                    <Table.Tr
+                      key={person._id}
+                      style={{ cursor: "pointer" }}
+                      onClick={() =>
+                        router.push(
+                          `/notes?personId=${person._id}&personName=${encodeURIComponent(personName || person.nickName || "")}`
+                        )
+                      }
+                    >
+                      <Table.Td>{person.firstName}</Table.Td>
+                      <Table.Td>{person.secondName}</Table.Td>
+                      <Table.Td>{person.nickName}</Table.Td>
+                      <Table.Td>
+                        <Tooltip
+                          label={`${person.firstName} ${person.secondName}`}
+                          withArrow
+                        >
+                          <Avatar radius="xl">
+                            {getInitials(
+                              `${person.firstName} ${person.secondName}`
+                            )}
+                          </Avatar>
+                        </Tooltip>
+                      </Table.Td>
+                      <Table.Td onClick={(e) => e.stopPropagation()}>
+                        <Group gap="xs" justify="end">
+                          <UpdatePerson person={person} refetch={refetch} />
+                          <DeletePerson
+                            id={person._id}
+                            setNotification={setNotification}
+                            refetch={refetch}
+                          />
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
               </Table.Tbody>
             </Table>
           </Box>
           <Center mt="auto" pb="md">
             <Pagination
-              total={Math.ceil(sortedPeople.length / peoplePerPage)}
+              total={Math.ceil(filteredPeople.length / peoplePerPage)}
               value={currentPage}
               onChange={setCurrentPage}
             />
           </Center>
         </>
-      )}
+      ) : searchQuery.trim() ? (
+        <EmptyList
+          title={"Aucun résultat"}
+          message={`Aucune personne ne correspond à "${searchQuery}".`}
+        />
+      ) : null}
 
       {notification && (
         <Notification

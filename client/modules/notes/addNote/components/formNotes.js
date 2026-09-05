@@ -39,10 +39,40 @@ const BELIEF_LEVEL_OPTIONS = [
   { value: '4', label: "J'y crois tellement que je pense qu'elle fait partie de moi et de ma personnalité" },
 ];
 
-const FormNotes = ({ note }) => {
+const sanitizeTags = (tags = []) => {
+  if (!Array.isArray(tags)) return [];
+
+  const seen = new Set();
+  const cleanedTags = [];
+
+  for (const tag of tags) {
+    const value = typeof tag === "string" ? tag.trim() : "";
+    if (!value) continue;
+
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    cleanedTags.push(value);
+  }
+
+  return cleanedTags;
+};
+
+const sanitizeSelectData = (items = [], valueKey, labelKey) =>
+  (Array.isArray(items) ? items : [])
+    .map((item) => {
+      const rawValue = item?.[valueKey];
+      const rawLabel = item?.[labelKey];
+      const value = rawValue == null ? "" : String(rawValue).trim();
+      const label = rawLabel == null ? "" : String(rawLabel).trim();
+      return { value, label };
+    })
+    .filter((item) => item.value && item.label);
+
+const FormNotes = ({ note, close: onClose }) => {
   const queryClient = useQueryClient();
   let dateValue = note?.date ? new Date(note.date) : new Date();
-  const { token, userId } = useAuthStore();
+  const { token } = useAuthStore();
   
   // États pour le modal de création de belief
   const [opened, { open, close }] = useDisclosure(false);
@@ -71,23 +101,14 @@ const FormNotes = ({ note }) => {
     "Love PartnerShip",
   ];
 
-  const { expectations } = useExpectationStore();
+  const { expectations, setExpectations } = useExpectationStore();
   const { fears } = useFearStore();
   const { claims } = useClaimStore();
   const { beliefs, setBeliefs } = useBeliefStore();
   console.log("Claims ===>", claims);
-  const expectationsData = expectations.map((expectation) => ({
-    value: expectation._id,
-    label: expectation.name,
-  }));
-  const claimsData = claims.map((claim) => ({
-    value: claim._id,
-    label: claim.title,
-  }));
-  const fearsData = fears.map((fear) => ({
-    value: fear._id,
-    label: fear.title,
-  }));
+  const expectationsData = sanitizeSelectData(expectations, "_id", "name");
+  const claimsData = sanitizeSelectData(claims, "_id", "title");
+  const fearsData = sanitizeSelectData(fears, "_id", "title");
 
   // console.log(expectations)
 
@@ -98,7 +119,7 @@ const FormNotes = ({ note }) => {
       rating: note?.rating ?? 0,
       lifeAspect: note?.lifeAspect ?? [],
       people: note?.people ?? [],
-      tags: note?.tags ?? [],
+      tags: sanitizeTags(note?.tags ?? []),
       emotions: note?.emotions ?? [],
       expectations: note?.expectations ?? [],
       claims: note?.claims ?? [],
@@ -106,6 +127,34 @@ const FormNotes = ({ note }) => {
       beliefs: note?.beliefs?.map(belief => typeof belief === 'object' ? belief._id : belief) ?? [],
     },
   });
+
+  const refetchExpectationsSorted = async () => {
+    try {
+      const { data } = await axios.get(`${apiUrl}/expectations/sorted-by-usage`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setExpectations(data);
+    } catch (e) {
+      console.error("Erreur refetch expectations:", e);
+    }
+  };
+
+  const mergeNewTagsIntoCache = (newTags) => {
+    if (!newTags || newTags.length === 0) return;
+    queryClient.setQueryData(["tagSuggestions"], (old = []) => {
+      const existingNames = new Set(
+        (old || []).map((t) => (typeof t?.name === "string" ? t.name : "").toLowerCase())
+      );
+      const toAdd = newTags.filter(
+        (t) => typeof t === "string" && t.trim() && !existingNames.has(t.trim().toLowerCase())
+      );
+      if (toAdd.length === 0) return old;
+      return [
+        ...(old || []),
+        ...toAdd.map((name) => ({ name: name.trim(), count: 1 })),
+      ];
+    });
+  };
 
   const createNoteMutation = useMutation({
     mutationFn: (values) =>
@@ -119,9 +168,13 @@ const FormNotes = ({ note }) => {
           },
         }
       ),
-    onSuccess: () => {
+    onSuccess: async (_data, variables) => {
+      const savedTags = sanitizeTags(variables?.tags ?? []);
+      mergeNewTagsIntoCache(savedTags);
       queryClient.invalidateQueries(["ListNotes"]);
-      // Réinitialiser le formulaire au lieu de le fermer
+      queryClient.invalidateQueries(["tagSuggestions"]);
+      queryClient.refetchQueries(["tagSuggestions"]);
+      await refetchExpectationsSorted();
       form.reset();
     },
     onError: (error) => {
@@ -142,9 +195,13 @@ const FormNotes = ({ note }) => {
           },
         }
       ),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      const savedTags = sanitizeTags(variables?.tags ?? []);
+      mergeNewTagsIntoCache(savedTags);
       queryClient.invalidateQueries(["ListNotes"]);
-      // Ne pas fermer le modal, peut-être afficher un message de succès à la place
+      queryClient.invalidateQueries(["tagSuggestions"]);
+      queryClient.refetchQueries(["tagSuggestions"]);
+      if (typeof onClose === "function") onClose();
     },
     onError: (error) => {
       console.error("Failed to update note:", error);
@@ -152,50 +209,35 @@ const FormNotes = ({ note }) => {
   });
 
   const handleSubmit = (values) => {
+    const payload = {
+      ...values,
+      tags: sanitizeTags(values.tags),
+    };
+
     if (note) {
-      updateNoteMutation.mutate(values);
+      updateNoteMutation.mutate(payload);
     } else {
-      createNoteMutation.mutate(values);
+      createNoteMutation.mutate(payload);
     }
   };
 
-  // Requête pour récupérer les tags de l'utilisateur
-  const { data: tags, refetch: refetchTags } = useQuery({
-    queryKey: ["tags"],
+  // Suggestions de tags déjà utilisés par l'utilisateur connecté
+  const { data: tagSuggestions = [] } = useQuery({
+    queryKey: ["tagSuggestions"],
     queryFn: () =>
       axios
-        .get(`${apiUrl}/tags`, {
+        .get(`${apiUrl}/notes/tags/suggestions`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
         .then((res) => res.data),
+    enabled: !!token,
   });
 
-  const createTagMutation = useMutation({
-    mutationFn: (newTag) =>
-      axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/tags`,
-        { name: newTag, color: "#000000" }, // Vous pouvez ajuster la couleur par défaut
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      ),
-    onSuccess: () => {
-      refetchTags();
-    },
-  });
-  const handleCreateTag = (query) => {
-    createTagMutation.mutate(query, {
-      onSuccess: (data) => {
-        const newTag = data.data;
-        form.setFieldValue("tags", [...form.values.tags, newTag._id]);
-      },
-    });
-    return null;
-  };
+  const tagSuggestionsData = sanitizeTags(
+    tagSuggestions.map((tag) => (typeof tag?.name === "string" ? tag.name : ""))
+  );
 
   // Mutation pour créer un nouveau belief
   const createBeliefMutation = useMutation({
@@ -255,12 +297,7 @@ const FormNotes = ({ note }) => {
   });
 
   // Utiliser les beliefs du store au lieu d'une requête directe
-  const beliefsData = (beliefs || [])
-    .filter((belief) => belief && belief._id && belief.belief) // Filtrer les beliefs valides
-    .map((belief) => ({
-      value: String(belief._id), // S'assurer que c'est une chaîne
-      label: String(belief.belief), // S'assurer que c'est une chaîne
-    }));
+  const beliefsData = sanitizeSelectData(beliefs, "_id", "belief");
 
   // Debug: vérifier les données des beliefs
   console.log("beliefs from store:", beliefs);
@@ -268,20 +305,26 @@ const FormNotes = ({ note }) => {
   console.log("form.values.beliefs:", form.values.beliefs);
 
   const groupedEmotions = Object.values(
-    emotions.reduce((acc, emotion) => {
-      if (!acc[emotion.category]) {
-        acc[emotion.category] = {
-          group: emotion.category,
+    (Array.isArray(emotions) ? emotions : []).reduce((acc, emotion) => {
+      const category = emotion?.category
+        ? String(emotion.category).trim()
+        : "Unknown";
+      const value = emotion?._id == null ? "" : String(emotion._id).trim();
+      const label = emotion?.name == null ? "" : String(emotion.name).trim();
+
+      if (!value || !label) return acc;
+
+      if (!acc[category]) {
+        acc[category] = {
+          group: category,
           items: [],
         };
       }
-      acc[emotion.category].items.push({
-        value: emotion._id,
-        label: emotion.name,
-      });
+
+      acc[category].items.push({ value, label });
       return acc;
     }, {})
-  );
+  ).filter((group) => group.items.length > 0);
 
   // Fonction pour mettre à jour le champ de note avec la transcription
   const handleTranscriptionUpdate = (transcription) => {
@@ -371,12 +414,10 @@ const FormNotes = ({ note }) => {
       <TagsInput
         label="Tags"
         placeholder="Select or create tags"
-        data={tags?.map((tag) => ({ value: tag._id, label: tag.name })) || []}
-        {...form.getInputProps("tags")}
+        data={tagSuggestionsData}
+        value={sanitizeTags(form.values.tags)}
+        onChange={(values) => form.setFieldValue("tags", sanitizeTags(values))}
         searchable
-        creatable
-        getCreateLabel={(query) => `+ Create ${query}`}
-        onCreate={handleCreateTag}
       />
       <Center>
         <EmojiRating
